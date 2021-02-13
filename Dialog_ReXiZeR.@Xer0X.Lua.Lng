@@ -1,0 +1,34 @@
+-- allow only as module usage:
+if not Xer0X.fnc_file_whoami({...}) then return end
+-- #####
+
+local English = {
+	MOk                     = "OK";
+	MCancel                 = "Cancel";
+	MError                  = "Error";
+	MPluginName             = "Subwindows resizer by @Xer0X";
+	MPluginSettings         = "ReXiZeR configuration dialog";
+	MStoreParams            = "&Store";
+	MRunScript              = "&Run";
+	MReloadDefaultScript    = "&Always reload default script";
+	MRequireWithReload      = "A&lways reload on 'require'";
+	MUseStrict              = "&Use 'strict' mode";
+	MReturnToMainMenu       = "&Return to Main menu";
+}
+
+local Russian = {
+	MOk                     = "OK";
+	MCancel                 = "Отмена";
+	MError                  = "Ошибка";
+	MPluginName             = "Размерятель внутренних окошек авторства @Xer0X";
+	MPluginSettings         = "Конфигурирование ReXiZeR-a (@Xer0X)";
+	MStoreParams            = "&Сохранить";
+	MRunScript              = "&Исполнить";
+	MReloadDefaultScript    = "&Перезагружать главный скрипт";
+	MRequireWithReload      = "П&ерезагружать по 'require'";
+	MUseStrict              = "&Режим 'strict'";
+	MReturnToMainMenu       = "&Возвращаться в главное меню";
+}
+
+local lang = win.GetEnv("FARLANG")
+return (lang == "Russian" and Russian or English)
