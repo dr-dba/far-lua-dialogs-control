@@ -1,4 +1,4 @@
-﻿--[[
+--[[
 if true then return end --]]
 --[[
              Xer0X (tm) CopyLeft (c) 2019-2021
@@ -155,24 +155,44 @@ require("Lib-Common-@Xer0X")
 require("introspection-@Xer0X")
 
 local fnc_file_whoami		= Xer0X.fnc_file_whoami
-local fnc_trim1			= Xer0X.fnc_trim1
+local fnc_str_trim1		= Xer0X.fnc_str_trim1
 local fnc_trim_R		= Xer0X.fnc_str_trim_right
 local fnc_norm_menu_value	= Xer0X.fnc_norm_menu_value
 local fnc_norm_guid		= Xer0X.fnc_norm_guid
 local fnc_file_exists		= Xer0X.fnc_file_exists
 local fnc_tbl_copy		= Xer0X.fnc_tbl_copy
 
-local is_mdl, tbl_args, own_file_path, own_file_fold, own_file_name, own_file_extn, p7, p8, p9, p10, p11
-	= fnc_file_whoami({ ... })
-local lng_file_path = own_file_path..".Lng"
-local lng_msg = loadfile(lng_file_path)("load_as_module")
-local dlg_file_path = own_file_fold.."far2x_dialog"..own_file_extn
-local far2dlg = loadfile(dlg_file_path)("load_as_module")
+local	is_mdl, tbl_args, own_file_path, own_file_fold, own_file_name, own_file_extn, p7, p8, p9, p10, p11
+		= fnc_file_whoami({ ... })
+
+local	lng_file_path = own_file_path..".Lng"
+local	lng_msg = loadfile(lng_file_path)("load_as_module")
+
+local	dlg_file_path, far2dlg
+do      dlg_file_path = own_file_fold.."far2x_dialog"..own_file_extn
+end
+if not	Xer0X.fnc_file_exists(dlg_file_path)
+then	dlg_file_path = own_file_fold.."dialog"..own_file_extn
+end
+if	Xer0X.fnc_file_exists(dlg_file_path)
+then	far2dlg = loadfile(dlg_file_path)("load_as_module")
+else	far2dlg = require("far2x.dialog")
+end
+
+local	hist_file_path, far2_hist
+do	hist_file_path = own_file_fold.."far2x_history"..own_file_extn
+end
+if not	Xer0X.fnc_file_exists(hist_file_path)
+then	hist_file_path = own_file_fold.."history"..own_file_extn
+end
+if	Xer0X.fnc_file_exists(hist_file_path)
+then	far2_hist = loadfile(hist_file_path)("load_as_module")
+else	far2_hist = require("far2x.history")
+end
+
 local dlg_cfg_id = win.Uuid("1FBED427-CA04-45CE-A3AB-1DCF1785AC98")
 local hist_sett_db_key = "ReXiZeR-key-@Xer0X"
 local hist_sett_db_name= "ReXiZeR-DB-@Xer0X"
-local hist_file_path = own_file_fold.."far2x_history"..own_file_extn
-local far2_hist = loadfile(hist_file_path)("load_as_module")
 local hist_data = far2_hist.newsettings(hist_sett_db_key, hist_sett_db_name)
 local cfg_default = {
 	ReloadDefaultScript	= false,
