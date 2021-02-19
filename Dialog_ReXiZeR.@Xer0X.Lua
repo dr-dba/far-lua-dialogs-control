@@ -60,7 +60,7 @@ local Info = package.loaded.regscript or function(...) return ... end
 local nfo = Info { _filename or ...,
 	name		= "Dialog_ReXiZeR.@Xer0X.Lua";
 	description	= "Resizes and moves all the Far Manager internal windows";
-	version		= "1.2.5"; -- http://semver.org/lang/ru/
+	version		= "1.2.6"; -- http://semver.org/lang/ru/
 	author		= "Xer0X";
 	url		= "https://forum.farmanager.com/viewtopic.php?f=15&t=11924";
 	id		= "2862E9F8-C65C-44F6-8C2A-FD609977DAED";
