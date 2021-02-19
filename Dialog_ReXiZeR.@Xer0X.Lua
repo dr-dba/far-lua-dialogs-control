@@ -60,7 +60,7 @@ local Info = package.loaded.regscript or function(...) return ... end
 local nfo = Info { _filename or ...,
 	name		= "Dialog_ReXiZeR.@Xer0X.Lua";
 	description	= "Resizes and moves all the Far Manager internal windows";
-	version		= "1.2.3";
+	version		= "1.2.5"; -- http://semver.org/lang/ru/
 	author		= "Xer0X";
 	url		= "https://forum.farmanager.com/viewtopic.php?f=15&t=11924";
 	id		= "2862E9F8-C65C-44F6-8C2A-FD609977DAED";
@@ -135,13 +135,13 @@ local DN_GOTFOCUS	= F.DN_GOTFOCUS
 local DN_KILLFOCUS	= F.DN_KILLFOCUS
 local DN_LISTCHANGE	= F.DN_LISTCHANGE
 local DN_RESIZECONSOLE	= F.DN_RESIZECONSOLE
-local PN_CHECKMASK	= F.PN_CHECKMASK	-- 0x00030000 196608
-local PN_CMPNAME	= F.PN_CMPNAME		-- 0x00000000 0
-local PN_CMPNAMELIST	= F.PN_CMPNAMELIST	-- 0x00010000 65536
-local PN_GENERATENAME	= F.PN_GENERATENAME	-- 0x00020000 131072
-local PN_NONE		= F.PN_NONE		-- 0x00000000 0
-local PN_SHOWERRORMESSAGE=F.PN_SHOWERRORMESSAGE	-- 0x02000000 33554432
-local PN_SKIPPATH	= F.PN_SKIPPATH		-- 0x01000000 16777216
+local PN_CHECKMASK	= F.PN_CHECKMASK	--! 0x00030000 196608
+local PN_CMPNAME	= F.PN_CMPNAME		--! 0x00000000 0
+local PN_CMPNAMELIST	= F.PN_CMPNAMELIST	--! 0x00010000 65536
+local PN_GENERATENAME	= F.PN_GENERATENAME	--! 0x00020000 131072
+local PN_NONE		= F.PN_NONE		--! 0x00000000 0
+local PN_SHOWERRORMESSAGE=F.PN_SHOWERRORMESSAGE	--! 0x02000000 33554432
+local PN_SKIPPATH	= F.PN_SKIPPATH		--! 0x01000000 16777216
 local KEY_EVENT		= F.KEY_EVENT
 
 local GUID_ZERO			= "00000000-0000-0000-0000-000000000000"
@@ -217,6 +217,65 @@ local _dlg_volt_items = { }
 local _plg_safe_ids = { }
 
 
+local tbl_dlg_areas = { }
+for ii_key, ii_val in pairs(tbl_menu_areas) do tbl_dlg_areas[ii_key] = ii_val end
+tbl_dlg_areas.Dialog = 1
+
+local function fnc_dlg_all_store()
+	local t_start = Far.UpTime
+	local tbl_save_opts = {
+		file_path	= dat_file_path,
+		file_init	= 1,
+		file_multi	= 1,
+		file_append	= 1
+	}
+	local res_val, file_hnd = dmp_srlz.fnc_file_save(nil, tbl_save_opts)
+	tbl_save_opts.file_init = nil
+	for	ii_key, ii_val in next, _dlg_data
+	do	if	ii_val.wid_cust
+		or	ii_val.widmod
+		or	ii_val.posmod
+		or	ii_val.menu_pos_sel
+		then	res_val, file_hnd = dmp_srlz.fnc_file_save(
+			{ --! only certain parts of ii_val:
+				text_head	= ii_val.text_head	,
+				text_foot	= ii_val.text_foot	,
+				posmod		= ii_val.posmod		,
+				widmod		= ii_val.widmod		,
+				wid_cust	= ii_val.wid_cust	,
+				menu_pos_sel	= ii_val.menu_pos_sel	,
+				menu_pos_top	= ii_val.menu_pos_top	,
+				menu_val_str	= ii_val.menu_val_str	,
+			},
+			tbl_save_opts, ii_key, true --! = Sorted by key
+				)
+		end
+	end
+	tbl_save_opts.file_close = 1
+	tbl_save_opts.file_prext = "} -- Done in "..(Far.UpTime - t_start).." ms\n"
+	res_val, file_hnd = dmp_srlz.fnc_file_save(nil, tbl_save_opts)
+	tbl_save_opts.file_path	 = own_file_path..".cfg"
+	tbl_save_opts.file_close = nil
+	tbl_save_opts.file_multi = nil
+	tbl_save_opts.file_init  = 1
+	tbl_save_opts.file_prext = "\n-- safe dialog/menu guids: \n"
+	res_val, file_hnd = dmp_srlz.fnc_file_save(_dlg_safe_ids, tbl_save_opts)
+	tbl_save_opts.file_init  = nil
+	tbl_save_opts.file_prext = ",\n-- safe plugin guids: \n"
+	res_val, file_hnd = dmp_srlz.fnc_file_save(_plg_safe_ids, tbl_save_opts)
+	tbl_save_opts.file_prext = ",\n-- do not restore current value of these menus: \n"
+	res_val, file_hnd = dmp_srlz.fnc_file_save(_dlg_exc_ret_ids, tbl_save_opts)
+	tbl_save_opts.file_prext = ",\n-- volatile (changeable) menu items:\n"
+	res_val, file_hnd = dmp_srlz.fnc_file_save(_dlg_volt_items, tbl_save_opts)
+	tbl_save_opts.file_close = 1
+	tbl_save_opts.file_prext = ",\n-- just an example of serializing to a preexisting file: \n"
+	res_val, file_hnd = dmp_srlz.fnc_file_save({a = 111, b = 222, "aaa", "bbb", "ccc", { val1 = 123, val2 = 345, val3 = 678 } }, tbl_save_opts)
+	tbl_save_opts.file_prext = nil
+	res_val, file_hnd = dmp_srlz.fnc_file_save(nil, tbl_save_opts)
+	dt_stored = far.UpTime
+end --! fnc_dlg_all_store
+
+
 local function fnc_dlg_conf_store()
 	local res_val, file_hnd
 	local tbl_save_opts = {
@@ -238,7 +297,7 @@ local function fnc_dlg_conf_store()
 	res_val, file_hnd = dmp_srlz.fnc_file_save({a = 111, b = 222, "aaa", "bbb", "ccc", { val1 = 123, val2 = 345, val3 = 678 } }, tbl_save_opts)
 	tbl_save_opts.file_prext = nil
 	res_val, file_hnd = dmp_srlz.fnc_file_save(nil, tbl_save_opts)
-end -- fnc_dlg_conf_store
+end --! fnc_dlg_conf_store
 
 local function fnc_dlg_data_store()
 	local t_start = Far.UpTime
@@ -256,7 +315,7 @@ local function fnc_dlg_data_store()
 		or	ii_val.posmod
 		or	ii_val.menu_pos_sel
 		then	res_val, file_hnd = dmp_srlz.fnc_file_save(
-			{ -- only certain parts of ii_val:
+			{ --! only certain parts of ii_val:
 				text_head	= ii_val.text_head	,
 				text_foot	= ii_val.text_foot	,
 				posmod		= ii_val.posmod		,
@@ -266,7 +325,7 @@ local function fnc_dlg_data_store()
 				menu_pos_top	= ii_val.menu_pos_top	,
 				menu_val_str	= ii_val.menu_val_str	,
 			},
-			tbl_save_opts, ii_key, true -- = Sorted by key
+			tbl_save_opts, ii_key, true --! = Sorted by key
 				)
 		end
 	end
@@ -277,7 +336,7 @@ local function fnc_dlg_data_store()
 	tbl_save_opts.file_close = 1
 	tbl_save_opts.file_prext = "\n-- Done in "..(Far.UpTime - t_start).." ms\n"
 	res_val, file_hnd = dmp_srlz.fnc_file_save(nil, tbl_save_opts)
-end -- fnc_dlg_data_store
+end --! fnc_dlg_data_store
 
 do
 	dat_file_path = own_file_path..".Dat"
@@ -432,12 +491,12 @@ local function fnc_rest_long_file_name(str_orig, max_size)
 	local str_rest, idx_test
 	local	str_short, str_like, left_like, str_test
 	local	pos_short, end_short = unicode.utf8.cfind(str_orig, "… ", nil, true)
-	if	pos_short
-	then	str_short = str_orig:sub(1, pos_short + 1)
+	if	pos_short -- and pos_short > 0
+	then	str_short = str_orig:sub(1, pos_short + 1) -- + 2
 		str_like  = str_orig:sub(1, pos_short - 1)
 		left_like = false
 	else	pos_short, end_short = unicode.utf8.cfind(str_orig, " …", nil, true)
-	if	pos_short
+	if	pos_short -- and pos_short > 0
 	then	str_short = str_orig:sub(pos_short + 1, str_orig:len())
 		str_like  = str_orig:sub(pos_short + 2, str_orig:len())
 		left_like = true
@@ -451,7 +510,7 @@ local function fnc_rest_long_file_name(str_orig, max_size)
 	then	local str_after = "\""..str_orig:sub(end_short)
 		for ii = 1, str_short:len() do
 			str_test = str_like:sub(ii)
-			pos_short, end_short = unicode.utf8.cfind(f_name_orig, str_test, nil, "plain")
+			pos_short, end_short = unicode.utf8.cfind(f_name_orig, str_test, nil, "plain") -- true == "plain"
 			if pos_short and pos_short == 1 then
 				local str_before= str_orig:sub(1, ii - 1).."\""
 				local trunc_size= max_size - str_before:len() - str_after:len()
@@ -533,7 +592,7 @@ for ii = 1, #tbl_posmod_types do
 		tbl_posmod_keys["CtrlNum"..ii]= pos_mod_type
 		tbl_posmod_keys[ii] = "CtrlNum"..ii
 	elseif	pos_mod_type == "AbsPos"
-	then
+	then	-- lets do it the same as the key:
 		tbl_posmod_keys[pos_mod_type] = "CtrlAltF123"
 		tbl_posmod_keys["CtrlAltF123"]= pos_mod_type
 		tbl_posmod_keys[ii] = "CtrlAltF123"
@@ -567,7 +626,6 @@ local dlg_coord = {
 -- ###
 if not	self
 then	self = {fnc_prep = debug.getinfo(1, "f").func,
-		
 	}
 end
 if	dlg_gmtr
@@ -878,7 +936,6 @@ local function fnc_gmtr_calc(dlg_gmtr, dlg_place, dlg_size)
 end
 
 local function fnc_action(sender, msg, dlg_is_menu)
-	
 	local	cons_gmtr	= far.AdvControl("ACTL_GETFARRECT")
 	local	cons_width	= cons_gmtr.Right	- cons_gmtr.Left+ 1
 	local	cons_height	= cons_gmtr.Bottom	- cons_gmtr.Top	+ 1
@@ -913,7 +970,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	and	_dlg_safe_ids[dlg_guid]
 	then	is_safe_id = true
 	else
-		if	dlg_guid_own
+		if	dlg_guid_own -- do it anyway?
 		then	dlg_guid = dlg_guid_own
 		end
 	end
@@ -923,7 +980,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	then	crc64_t = _crc64:new()
 	end
 	for	deii = 1, math.huge, 1
-	do
+	do	-- guess_area =
 		local t_dlg_elm_get_1 = Far.UpTime
 		dei = _hDlg:send(
 			"DM_GETDLGITEM",
@@ -971,7 +1028,6 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			and	dei[1] ~= 5
 			and	dei[1] ~= 6
 			then
-			
 				crc64_t:fnc_append(dei[10].."\n")
 			end
 		end
@@ -982,7 +1038,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	then
 		for n in pairs(_dlg_info) do table.insert(dlg_info_sign, n) end
 		table.sort(dlg_info_sign)
-		dlg_type_sign = "{"..table.concat(dlg_info_sign, "&").."}"
+		dlg_type_sign = "{"..table.concat(dlg_info_sign, "&").."}" --]]
 		local	is_menu_likely, is_dlg_likely
 		if	dlg_elems[1][1] == 11 and #dlg_elems == 1
 		then	dlg_titles = _hDlg:send(DM_LISTGETTITLES, 1)
@@ -1105,7 +1161,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		dlg_xuid =
 			is_safe_id and dlg_guid..(dlg_afnLR and (dlg_afnLR > 0 and "$R" or "$L") or "")
 			or dlg_guid and dlg_guid.."#"..dlg_sign_crc64_str
-			or dlg_sign_crc64_str
+			or dlg_sign_crc64_str -- ?? crc64_t._crc64_str
 		if not	is_safe_id
 		and	dlg_guid_pre
 		then	local	tbl_id_stats = _dlg_id_stats[dlg_guid_pre]
@@ -1137,7 +1193,6 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		_dlg_data[dlg_xuid].elms_orig	= fnc_tbl_copy(dlg_elems)
 		_dlg_data[dlg_xuid].affnt_lr	= dlg_afnLR
 		_dlg_data[dlg_xuid].dt_opened	= os.time()
-		
 		_dlg_handles[dlg_hnd_str].xuid = dlg_xuid
 		_dlg_handles[dlg_hnd_str].dt_detect = Far.UpTime
 		_dlg_handles[dlg_hnd_str].text_top = _dlg_data[dlg_xuid].text_head
@@ -1169,7 +1224,6 @@ local function fnc_action(sender, msg, dlg_is_menu)
 						end
 					end
 				end
-			
 				dlg_menu_list_idx_by_text = _hDlg:send("DM_LISTFINDSTRING", 1, { Pattern = menu_ret_val_str, Flags = { PN_CMPNAMELIST } })
 				if not	dlg_menu_list_idx_by_text
 				and	is_masked
@@ -1218,7 +1272,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 				then 	pos_mod_str = tbl_posmod_types[pos_mod_data]
 					pos_mod_key = tbl_posmod_keys[pos_mod_str]
 				elseif	pos_mod_data_type == "table"
-				then
+				then	-- Absolute position:
 					pos_mod_key = "CtrlAltF123"
 					the_mod = pos_mod_data
 				end
@@ -1226,7 +1280,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 					op_key = pos_mod_key, the_mod = the_mod
 				}
 			end
-		end -- of "IF Track Allowed .."
+		end --! of "IF Track Allowed .."
 	elseif
 		sender == "macro"
 	then
@@ -1248,7 +1302,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 							or nil
 					}
 			end
-		end
+		end -- of "IF TrackOff .."
 	end
 	::fix_alignment::
 	local wid_adj_loop = false
@@ -1258,7 +1312,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			tbl_layout_operations[ii_op].the_mod,
 			-- initial saved:
 			_dlg_data[dlg_xuid].affnt_lr,
-			dlg_gmtr,
+			--[[ the current:]]dlg_gmtr,
 			_dlg_data[dlg_xuid].gmtr_orig,
 			_dlg_data[dlg_xuid].wid_cust
 				)
@@ -1290,20 +1344,20 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	if wid_adj then
 	--[[ always current required,
 	probably table copy is not needed:]]
-	_dlg_data[dlg_xuid].gmtr_curr	= dlg_gmtr
-	_dlg_data[dlg_xuid].elm_sizes	= dlg_elszs
-	_dlg_data[dlg_xuid].elms_curr	= dlg_elems
+	_dlg_data[dlg_xuid].gmtr_curr	= dlg_gmtr	-- fnc_tbl_copy(dlg_gmtr)
+	_dlg_data[dlg_xuid].elm_sizes	= dlg_elszs	-- fnc_tbl_copy(dlg_elszs)
+	_dlg_data[dlg_xuid].elms_curr	= dlg_elems	-- fnc_tbl_copy(dlg_elems)
 	targ_W = dlg_gmtr.W
 	local total_height = 0
 	for	deii, _dei in pairs(dlg_elszs)
 	do	dei = { _dei[1], _dei[2], _dei[3], _dei[4], _dei[5], _dei[6], _dei[7], _dei[8], _dei[9], _dei[10] }
 		local elm_lim, elm_mod, elem_orig_x2, elem_targ_x2 = nil, false, dei[4], -1
-		total_height = math.max(math.max(total_height, dei[5]), dei[3])
+		total_height = math.max(math.max(total_height, dei[5]), dei[3]) -- ??????????
 		-- menu with zero width:
-		if	dei[1] == 11 and
-			dei[2] ==  0 and
-			dei[3] ==  0 and
-			dei[4] ==  0
+		if	dei[1] == 11
+		and	dei[2] == 0 
+		and	dei[3] == 0
+		and	dei[4] == 0
 		then	dei[4] = 1
 		end
 		if	rest_orig
@@ -1343,7 +1397,6 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			local 	str_rest = fnc_rest_long_file_name(str_orig, max_size)
 			if	str_rest
 			then	far.SendDlgMessage(_hDlg, DM_SETTEXT, deii, str_rest)
-				
 				dei[10] = str_rest
 				dlg_elems[deii][10] = str_rest
 				elem_targ_x2 = 0
@@ -1352,27 +1405,25 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		end
 		if	elm_mod
 		then
-		
 			if pcall(function()
 				local ret_val
-				
 				dlg_elszs[deii][4] = elem_targ_x2
 				dlg_elems[deii][4] = elem_targ_x2
 				local str_trimd = fnc_trim_R(dei[10])
 				if	dei[01] == 0
 				and	dei[10]:len() > elem_targ_x2 - dei[2] + 1
-				and
+				and	-- TODO: mf.trim(..) is ineffective!!
 					dei[10]:len() >
 						string.len(str_trimd)
 				then 	dlg_elems[deii][10] =
 						str_trimd
 				end
 				ret_val = far.SetDlgItem(_hDlg, deii, dlg_elems[deii])
-			end) then end -- of PCall(SetDlgItem)
-		end -- of element modified
-	end end
+			end) then end --! of PCall(SetDlgItem)
+		end --! of element modified
+	end end -- of elements cycle (if wid_adj)
 
-end
+end -- fnc_action(...)
 
 
 local function fnc_get_mcr_area_info(hDlg, src)
@@ -1402,9 +1453,9 @@ local function fnc_get_mcr_area_info(hDlg, src)
 			and Dlg.Id	~= "" and Dlg.Id	~= GUID_ZERO	and Dlg.Id	and Dlg.Id
 	dlg_handle.mcr_guid_owner = Dlg.Owner
 	dlg_handle.dt_mcr = dt_now
-end
+end -- of fnc_get_mcr_area_info
 
-local fnc_event_async_safe
+local fnc_event_async_safe -- forward declaration
 
 local function fnc_event_async_safe__resume(tmr_sender, is_sender_active, dlg_handle, evt, fde)
 	if	is_sender_active
@@ -1489,8 +1540,8 @@ local dlg_guid = dlg_inf_d and fnc_norm_guid(dlg_inf_d.Id) or fnc_norm_guid(Dlg.
 local dlg_guid_own = dlg_inf_d and fnc_norm_guid(dlg_inf_d.Owner) or fnc_norm_guid(Dlg.Owner) or fnc_norm_guid(dlg_handle.mcr_guid_owner)
 --[[ -- drop down box for free text:
 if	false
---!	or dlg_guid == "4406C688-209F-4378-8B7B-465BF16205FF"
---!	or dlg_guid == "D853E243-6B82-4B84-96CD-E733D77EEAA1"
+--	or dlg_guid == "4406C688-209F-4378-8B7B-465BF16205FF"
+--	or dlg_guid == "D853E243-6B82-4B84-96CD-E733D77EEAA1"
 then return false end
 ]]
 _dlg_guid		= dlg_guid
@@ -1522,7 +1573,7 @@ local function fnc_close_countdown(tmr_sender, dlg_hnd_str, dt_closing, force_cl
 		dlg_hand.is_closed = true
 		dlg_hand.dt_closed = dt_closing
 	else	dlg_hand.CLOSE_CANCEL = Far.UpTime
-	end;
+	end; --]]
 	dlg_hand.is_closing = false
 end
 
@@ -1566,7 +1617,7 @@ then
 end
 dlg_hand.dt_updated = dt_now
 dlg_hand.evt_updated = { evt = evt, fde = fde }
-if
+if--	fde.Msg ~= DN_ENTERIDLE
 	evt == DE_DLGPROCINIT and (
 		fde.Msg == DN_INPUT or
 		fde.Msg == DN_CONTROLINPUT
@@ -1585,6 +1636,20 @@ if 	dlg_hand.xuid
 then	dlg_data = _dlg_data[dlg_hand.xuid]
 end
 
+local key_F5
+goto xer0x_test_end
+if	evt == DE_DLGPROCINIT
+and	fde.Msg == DN_DRAWDIALOGDONE
+then
+end
+key_F5 = evt == DE_DLGPROCEND and
+	fde.Msg == DN_CONTROLINPUT and
+	fde.Param2.EventType == KEY_EVENT and
+	fde.Param2.VirtualKeyCode == 116 -- VK_F5
+if	fde.Msg ~= DN_ENTERIDLE
+then
+end
+::xer0x_test_end::
 
 if
 	dlg_close
@@ -1603,7 +1668,7 @@ then
 		then    local	tbl_menu_sel = fde.hDlg:send("DM_LISTGETCURPOS", 1)
 			if	tbl_menu_sel.SelectPos == 1
 			and	false
-			then
+			then	-- too fast?
 			else
 				dlg_data.menu_pos_sel = tbl_menu_sel.SelectPos
 				dlg_data.menu_pos_top = tbl_menu_sel.TopPos
