@@ -60,7 +60,7 @@ local Info = package.loaded.regscript or function(...) return ... end
 local nfo = Info { _filename or ...,
 	name		= "Dialog_ReXiZeR.@Xer0X.Lua";
 	description	= "Resizes and moves all the Far Manager internal windows";
-	version		= "1.2.5";
+	version		= "1.2.5"; 
 	author		= "Xer0X";
 	url		= "https://forum.farmanager.com/viewtopic.php?f=15&t=11924";
 	id		= "2862E9F8-C65C-44F6-8C2A-FD609977DAED";
@@ -94,7 +94,6 @@ CtrlRAltR	RCtrlRAltR]],
 -- @@@ END OF THE INFO BLOCK @@@
 
 -- ### SETTINGS SECTION ###
-if not Xer0X then Xer0X = { } end
 -- "margin" ==> "full" ==> "original" ==> custom (if have) ==> "percent" ==> "margin" ==> "full" ==> (.. and so on)
 local widmod_start = "WidthMargin"
 local widmod_margin_width	=  4
@@ -150,7 +149,6 @@ local FAR_EXIT_MSG_DLG_ID_TXT	= "4EBBEFC8-2084-4B7F-94C0-692CE136894D"
 local LUA_EXPLORE_MENU_ID_TXT	= "7646F761-8954-42CA-9CFC-E3F98A1C54D3"
 local FAR_EXIT_MSG_DLG_ID_BIN	= win.Uuid(FAR_EXIT_MSG_DLG_ID_TXT)
 local tbl_menu_areas = { Menu = 1, UserMenu = 1, MainMenu = 1, Disks = 1, ShellAutoCompletion = 1, DialogAutoCompletion = 1 }
-
 require("Lib-Common-@Xer0X")
 require("introspection-@Xer0X")
 
@@ -222,7 +220,8 @@ local function fnc_dlg_conf_store()
 	local tbl_save_opts = {
 		file_path	= cfg_file_path,
 		file_init	= 1,
-		file_append	= 1
+		file_append	= 1,
+		sort_by_key	= 1,
 	}
 	tbl_save_opts.file_prext = "\n-- safe dialog guids: \n"
 	res_val, file_hnd = dmp_srlz.fnc_file_save(_dlg_safe_ids, tbl_save_opts)
@@ -246,7 +245,18 @@ local function fnc_dlg_data_store()
 		file_path	= dat_file_path,
 		file_init	= 1,
 		file_multi	= 1,
-		file_append	= 1
+		file_append	= 1,
+		sort_by_key	= 1,
+		fnc_sort_key	= function(fnc_cmp_key_val)
+			return function(kv1, kv2)
+				if	kv1.key == "named_id"
+				then	return true
+				elseif	kv2.key == "named_id"
+				then	return false
+				else	return fnc_cmp_key_val(kv1, kv2)
+				end
+			end
+		end
 	}
 	local res_val, file_hnd = dmp_srlz.fnc_file_save(nil, tbl_save_opts)
 	tbl_save_opts.file_init = nil
@@ -267,14 +277,14 @@ local function fnc_dlg_data_store()
 				menu_val_str	= ii_val.menu_val_str	,
 				named_id	= ii_val.named_id	,
 			},
-			tbl_save_opts, ii_key, true -- = Sorted by key
+			tbl_save_opts, ii_key
 				)
 		end
 	end
 	tbl_save_opts.file_init  = nil
 	tbl_save_opts.file_multi = nil
 	tbl_save_opts.file_prext = "},\n-- lets try to learn which ids are safe: \n"
-	res_val, file_hnd = dmp_srlz.fnc_file_save(_dlg_id_stats, tbl_save_opts)
+	res_val, file_hnd = dmp_srlz.fnc_file_save(_dlg_id_stats, tbl_save_opts, nil, true)
 	tbl_save_opts.file_close = 1
 	tbl_save_opts.file_prext = "\n-- Done in "..(Far.UpTime - t_start).." ms\n"
 	res_val, file_hnd = dmp_srlz.fnc_file_save(nil, tbl_save_opts)
@@ -434,12 +444,12 @@ local function fnc_rest_long_file_name(str_orig, max_size)
 	local str_rest, idx_test
 	local	str_short, str_like, left_like, str_test
 	local	pos_short, end_short = unicode.utf8.cfind(str_orig, "… ", nil, true)
-	if	pos_short
-	then	str_short = str_orig:sub(1, pos_short + 1)
+	if	pos_short 
+	then	str_short = str_orig:sub(1, pos_short + 1) 
 		str_like  = str_orig:sub(1, pos_short - 1)
 		left_like = false
 	else	pos_short, end_short = unicode.utf8.cfind(str_orig, " …", nil, true)
-	if	pos_short
+	if	pos_short 
 	then	str_short = str_orig:sub(pos_short + 1, str_orig:len())
 		str_like  = str_orig:sub(pos_short + 2, str_orig:len())
 		left_like = true
@@ -453,7 +463,7 @@ local function fnc_rest_long_file_name(str_orig, max_size)
 	then	local str_after = "\""..str_orig:sub(end_short)
 		for ii = 1, str_short:len() do
 			str_test = str_like:sub(ii)
-			pos_short, end_short = unicode.utf8.cfind(f_name_orig, str_test, nil, "plain")
+			pos_short, end_short = unicode.utf8.cfind(f_name_orig, str_test, nil, "plain") 
 			if pos_short and pos_short == 1 then
 				local str_before= str_orig:sub(1, ii - 1).."\""
 				local trunc_size= max_size - str_before:len() - str_after:len()
@@ -535,7 +545,7 @@ for ii = 1, #tbl_posmod_types do
 		tbl_posmod_keys["CtrlNum"..ii]= pos_mod_type
 		tbl_posmod_keys[ii] = "CtrlNum"..ii
 	elseif	pos_mod_type == "AbsPos"
-	then
+	then	
 		tbl_posmod_keys[pos_mod_type] = "CtrlAltF123"
 		tbl_posmod_keys["CtrlAltF123"]= pos_mod_type
 		tbl_posmod_keys[ii] = "CtrlAltF123"
@@ -569,7 +579,6 @@ local dlg_coord = {
 -- ###
 if not	self
 then	self = {fnc_prep = debug.getinfo(1, "f").func,
-		
 	}
 end
 if	dlg_gmtr
@@ -880,7 +889,6 @@ local function fnc_gmtr_calc(dlg_gmtr, dlg_place, dlg_size)
 end
 
 local function fnc_action(sender, msg, dlg_is_menu)
-	
 	local	cons_gmtr	= far.AdvControl("ACTL_GETFARRECT")
 	local	cons_width	= cons_gmtr.Right	- cons_gmtr.Left+ 1
 	local	cons_height	= cons_gmtr.Bottom	- cons_gmtr.Top	+ 1
@@ -915,7 +923,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	and	_dlg_safe_ids[dlg_guid]
 	then	is_safe_id = true
 	else
-		if	dlg_guid_own
+		if	dlg_guid_own 
 		then	dlg_guid = dlg_guid_own
 		end
 	end
@@ -925,7 +933,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	then	crc64_t = _crc64:new()
 	end
 	for	deii = 1, math.huge, 1
-	do
+	do	
 		local t_dlg_elm_get_1 = Far.UpTime
 		dei = _hDlg:send(
 			"DM_GETDLGITEM",
@@ -973,7 +981,6 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			and	dei[1] ~= 5
 			and	dei[1] ~= 6
 			then
-			
 				crc64_t:fnc_append(dei[10].."\n")
 			end
 		end
@@ -984,7 +991,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	then
 		for n in pairs(_dlg_info) do table.insert(dlg_info_sign, n) end
 		table.sort(dlg_info_sign)
-		dlg_type_sign = "{"..table.concat(dlg_info_sign, "&").."}"
+		dlg_type_sign = "{"..table.concat(dlg_info_sign, "&").."}" 
 		local	is_menu_likely, is_dlg_likely
 		if	dlg_elems[1][1] == 11 and #dlg_elems == 1
 		then	dlg_titles = _hDlg:send(DM_LISTGETTITLES, 1)
@@ -995,7 +1002,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			if	str_title
 			then	is_dlg_likely = true
 				dlg_titles = { Title = str_title }
-			else	error("how is it possible !?!?!?!?")
+			else	error("how is that possible !?!?!?!?")
 			end
 		end
 		if	Area.Current	== "MainMenu" and is_menu_likely
@@ -1107,7 +1114,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		dlg_xuid =
 			is_safe_id and dlg_guid..(dlg_afnLR and (dlg_afnLR > 0 and "$R" or "$L") or "")
 			or dlg_guid and dlg_guid.."#"..dlg_sign_crc64_str
-			or dlg_sign_crc64_str
+			or dlg_sign_crc64_str 
 		if not	is_safe_id
 		and	dlg_guid_vlt
 		then	local	tbl_id_stats = _dlg_id_stats[dlg_guid_vlt]
@@ -1119,16 +1126,15 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		end
 		if not	_dlg_data[dlg_xuid]
 		then	_dlg_data[dlg_xuid] = {
-				guid = dlg_guid,
-				guid_vlt = dlg_guid_vlt and dlg_guid ~= dlg_guid_vlt and dlg_guid_vlt or nil,
-				named_id = dlg_guid_vlt and tbl_far_guid_names[dlg_guid_vlt] or nil,
-				xuid = dlg_xuid,
-				crc64 = dlg_sign_crc64_str,
-				area = guess_area,
+				guid	= dlg_guid,
+				guid_vlt= dlg_guid_vlt and dlg_guid ~= dlg_guid_vlt and dlg_guid_vlt or nil,
+				named_id= tbl_far_guid_names[dlg_guid_vlt],
+				xuid	= dlg_xuid,
+				crc64	= dlg_sign_crc64_str,
+				area	= guess_area,
 				is_menu	= is_menu
 					}
 		end
-		
 		_dlg_data[dlg_xuid].crc_t	= t_crc_2 - t_crc_1
 		_dlg_data[dlg_xuid].text_head	= dlg_titles and dlg_titles.Title
 		_dlg_data[dlg_xuid].text_foot	= dlg_titles and dlg_titles.Bottom
@@ -1138,12 +1144,11 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		_dlg_data[dlg_xuid].elms_orig	= fnc_tbl_copy(dlg_elems)
 		_dlg_data[dlg_xuid].affnt_lr	= dlg_afnLR
 		_dlg_data[dlg_xuid].dt_opened	= os.time()
-		
-		_dlg_handles[dlg_hnd_str].xuid = dlg_xuid
-		_dlg_handles[dlg_hnd_str].named_id = _dlg_data[dlg_xuid].named_id
-		_dlg_handles[dlg_hnd_str].dt_detect = Far.UpTime
-		_dlg_handles[dlg_hnd_str].text_top = _dlg_data[dlg_xuid].text_head
-		_dlg_handles[dlg_hnd_str].text_low = _dlg_data[dlg_xuid].text_foot
+		_dlg_handles[dlg_hnd_str].xuid	=	dlg_xuid
+		_dlg_handles[dlg_hnd_str].dt_detect =	Far.UpTime
+		_dlg_handles[dlg_hnd_str].named_id =	_dlg_data[dlg_xuid].named_id
+		_dlg_handles[dlg_hnd_str].text_top =	_dlg_data[dlg_xuid].text_head
+		_dlg_handles[dlg_hnd_str].text_low =	_dlg_data[dlg_xuid].text_foot
 		if not	Xer0X.DLG_TRACK_OFF
 		then
 			if not	is_menu
@@ -1171,7 +1176,6 @@ local function fnc_action(sender, msg, dlg_is_menu)
 						end
 					end
 				end
-			
 				dlg_menu_list_idx_by_text = _hDlg:send("DM_LISTFINDSTRING", 1, { Pattern = menu_ret_val_str, Flags = { PN_CMPNAMELIST } })
 				if not	dlg_menu_list_idx_by_text
 				and	is_masked
@@ -1220,7 +1224,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 				then 	pos_mod_str = tbl_posmod_types[pos_mod_data]
 					pos_mod_key = tbl_posmod_keys[pos_mod_str]
 				elseif	pos_mod_data_type == "table"
-				then
+				then	
 					pos_mod_key = "CtrlAltF123"
 					the_mod = pos_mod_data
 				end
@@ -1250,7 +1254,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 							or nil
 					}
 			end
-		end
+		end -- of "IF TrackOff .."
 	end
 	::fix_alignment::
 	local wid_adj_loop = false
@@ -1260,7 +1264,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			tbl_layout_operations[ii_op].the_mod,
 			-- initial saved:
 			_dlg_data[dlg_xuid].affnt_lr,
-			dlg_gmtr,
+			--[[! the current:]]dlg_gmtr,
 			_dlg_data[dlg_xuid].gmtr_orig,
 			_dlg_data[dlg_xuid].wid_cust
 				)
@@ -1292,15 +1296,15 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	if wid_adj then
 	--[[ always current required,
 	probably table copy is not needed:]]
-	_dlg_data[dlg_xuid].gmtr_curr	= dlg_gmtr
-	_dlg_data[dlg_xuid].elm_sizes	= dlg_elszs
-	_dlg_data[dlg_xuid].elms_curr	= dlg_elems
+	_dlg_data[dlg_xuid].gmtr_curr	= dlg_gmtr	
+	_dlg_data[dlg_xuid].elm_sizes	= dlg_elszs	
+	_dlg_data[dlg_xuid].elms_curr	= dlg_elems	
 	targ_W = dlg_gmtr.W
 	local total_height = 0
 	for	deii, _dei in pairs(dlg_elszs)
 	do	dei = { _dei[1], _dei[2], _dei[3], _dei[4], _dei[5], _dei[6], _dei[7], _dei[8], _dei[9], _dei[10] }
 		local elm_lim, elm_mod, elem_orig_x2, elem_targ_x2 = nil, false, dei[4], -1
-		total_height = math.max(math.max(total_height, dei[5]), dei[3])
+		total_height = math.max(math.max(total_height, dei[5]), dei[3]) 
 		-- menu with zero width:
 		if	dei[1] == 11
 		and	dei[2] == 0
@@ -1345,7 +1349,6 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			local 	str_rest = fnc_rest_long_file_name(str_orig, max_size)
 			if	str_rest
 			then	far.SendDlgMessage(_hDlg, DM_SETTEXT, deii, str_rest)
-				
 				dei[10] = str_rest
 				dlg_elems[deii][10] = str_rest
 				elem_targ_x2 = 0
@@ -1354,16 +1357,14 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		end
 		if	elm_mod
 		then
-		
 			if pcall(function()
 				local ret_val
-				
 				dlg_elszs[deii][4] = elem_targ_x2
 				dlg_elems[deii][4] = elem_targ_x2
 				local str_trimd = fnc_trim_R(dei[10])
 				if	dei[01] == 0
 				and	dei[10]:len() > elem_targ_x2 - dei[2] + 1
-				and
+				and	
 					dei[10]:len() >
 						string.len(str_trimd)
 				then 	dlg_elems[deii][10] =
@@ -1372,9 +1373,9 @@ local function fnc_action(sender, msg, dlg_is_menu)
 				ret_val = far.SetDlgItem(_hDlg, deii, dlg_elems[deii])
 			end) then end -- of PCall(SetDlgItem)
 		end -- of element modified
-	end end
+	end end 
 
-end
+end -- fnc_action(...)
 
 
 local function fnc_get_mcr_area_info(hDlg, src)
@@ -1404,9 +1405,9 @@ local function fnc_get_mcr_area_info(hDlg, src)
 			and Dlg.Id	~= "" and Dlg.Id	~= GUID_ZERO	and Dlg.Id	and Dlg.Id
 	dlg_handle.mcr_guid_owner = Dlg.Owner
 	dlg_handle.dt_mcr = dt_now
-end
+end -- of fnc_get_mcr_area_info
 
-local fnc_event_async_safe
+local fnc_event_async_safe 
 
 local function fnc_event_async_safe__resume(tmr_sender, is_sender_active, dlg_handle, evt, fde)
 	if	is_sender_active
@@ -1524,7 +1525,7 @@ local function fnc_close_countdown(tmr_sender, dlg_hnd_str, dt_closing, force_cl
 		dlg_hand.is_closed = true
 		dlg_hand.dt_closed = dt_closing
 	else	dlg_hand.CLOSE_CANCEL = Far.UpTime
-	end;
+	end; 
 	dlg_hand.is_closing = false
 end
 
@@ -1605,7 +1606,7 @@ then
 		then    local	tbl_menu_sel = fde.hDlg:send("DM_LISTGETCURPOS", 1)
 			if	tbl_menu_sel.SelectPos == 1
 			and	false
-			then
+			then	
 			else
 				dlg_data.menu_pos_sel = tbl_menu_sel.SelectPos
 				dlg_data.menu_pos_top = tbl_menu_sel.TopPos
