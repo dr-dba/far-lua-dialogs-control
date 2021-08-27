@@ -1,5 +1,6 @@
 --[[
 if true then return end --]]
+
 --[[
              Xer0X (tm) CopyLeft (c) 2019-2021
           Super Ultra Extra Total Dialogs & Panels
@@ -72,9 +73,12 @@ local nfo = Info { _filename or ...,
 --	execute		= function(nfo, name) end;
 --	disabled	= true;
 	options		= {
+		TITLE = "[ReXiZeR] Resize dialogs && other sub-windows @Xer0X",
+		AREAS_OF_INTEREST = string.lower("Other Dialog MainMenu Menu UserMenu Disks Search ShellAutoCompletion"),
 		ACT_KEY_F5 = "F5",
 		ACT_KEYS_ALL =
-[[$(F5)		Alt$(F5)	RAlt$(F5)
+[[CtrlShiftRight
+$(F5)		Alt$(F5)	RAlt$(F5)
 CtrlAltRight	CtrlAltLeft	CtrlAltUp	CtrlAltDown
 CtrlRAltRight	CtrlRAltLeft	CtrlRAltUp	CtrlRAltDown
 RCtrlRAltRight	RCtrlRAltLeft	RCtrlRAltUp	RCtrlRAltDown
@@ -149,6 +153,7 @@ local FAR_EXIT_MSG_DLG_ID_TXT	= "4EBBEFC8-2084-4B7F-94C0-692CE136894D"
 local LUA_EXPLORE_MENU_ID_TXT	= "7646F761-8954-42CA-9CFC-E3F98A1C54D3"
 local FAR_EXIT_MSG_DLG_ID_BIN	= win.Uuid(FAR_EXIT_MSG_DLG_ID_TXT)
 local tbl_menu_areas = { Menu = 1, UserMenu = 1, MainMenu = 1, Disks = 1, ShellAutoCompletion = 1, DialogAutoCompletion = 1 }
+Xer0X.DLG_TRACK_STATE = 1
 require("Lib-Common-@Xer0X")
 require("introspection-@Xer0X")
 
@@ -228,7 +233,7 @@ local function fnc_dlg_conf_store()
 	tbl_save_opts.file_init  = nil
 	tbl_save_opts.file_prext = ",\n-- safe plugin guids: \n"
 	res_val, file_hnd = dmp_srlz.fnc_file_save(_plg_safe_ids, tbl_save_opts)
-	tbl_save_opts.file_prext = ",\n-- do not restore current value of these menus: \n"
+	tbl_save_opts.file_prext = ",\n-- do not restore (ignore, exclude) current value of these menus: \n"
 	res_val, file_hnd = dmp_srlz.fnc_file_save(_dlg_exc_ret_ids, tbl_save_opts)
 	tbl_save_opts.file_prext = ",\n-- volatile (changeable) menu items:\n"
 	res_val, file_hnd = dmp_srlz.fnc_file_save(_dlg_volt_items, tbl_save_opts)
@@ -331,7 +336,7 @@ do
 	if not _dlg_exc_ret_ids["4EAC7327-6C97-444B-AC6A-2FCCCBAA7210"] then _dlg_exc_ret_ids["4EAC7327-6C97-444B-AC6A-2FCCCBAA7210"]	= 1 end
 	-- Ignore HardLinksChoice menu (@Xer0X):
 	if not _dlg_exc_ret_ids["29DE1DD2-57AC-4FFE-904D-376D4A84A089"] then _dlg_exc_ret_ids["29DE1DD2-57AC-4FFE-904D-376D4A84A089"]	= 1 end
-	--[[ Ignore Filters menu.
+	--[[ Ignore Filters menu. (5B87B32E-494A-4982-AF55-DAFFCD251383)
 	TODO: differentiate macro calling against user (manual) calling ]]
 	if not _dlg_exc_ret_ids[far.Guids.FiltersMenuId]		then _dlg_exc_ret_ids	[far.Guids.FiltersMenuId]		= 1 end
 	if not _dlg_exc_ret_ids[LUACHECK_RESULT_MENU_ID]		then _dlg_exc_ret_ids	[LUACHECK_RESULT_MENU_ID]		= 1 end
@@ -535,9 +540,9 @@ local tbl_posmod_types = {
 	[-1] = "NOT-ALIGNED"
 		}
 
-local tbl_posmod_keys = {}
-local tbl_posmod_ids = {}
-local tbl_aligned = {}
+local tbl_posmod_keys	= { }
+local tbl_posmod_ids	= { }
+local tbl_aligned	= { }
 for ii = 1, #tbl_posmod_types do
 	local pos_mod_type = tbl_posmod_types[ii]
 	if ii > 0 and ii < 10
@@ -578,7 +583,7 @@ local dlg_coord = {
 	fnc_prep = function(self, dlg_gmtr)
 -- ###
 if not	self
-then	self = {fnc_prep = debug.getinfo(1, "f").func,
+then	self = { fnc_prep = debug.getinfo(1, "f").func,
 	}
 end
 if	dlg_gmtr
@@ -608,40 +613,40 @@ self.W = self.X2 - self.X1 + 1
 self.H = self.Y2 - self.Y1 + 1
 self.X = self.X1
 self.Y = self.Y1
-self.XC= math.abs((self.X2 + self.X1) - Far.Width ) < 3
-self.YC= math.abs((self.Y2 + self.Y1) - Far.Height) < 3
+self.XC= math.abs(self.X2 + self.X1 - Far.Width ) < 3
+self.YC= math.abs(self.Y2 + self.Y1 - Far.Height) < 3
 self.align_id = nil
 self.align_str= nil
-if	self.X1 == 0 and
-	self.Y1 == 0
+if	self.X1 == 0
+and	self.Y1 == 0
 then	self.align_id = 7
-elseif	self.X2 == Far.Width and
-	self.Y2 == Far.Height
+elseif	self.X2 == Far.Width
+and	self.Y2 == Far.Height
 then	self.align_id = 3
-elseif	self.X2 == Far.Width and
-	self.Y1 == 0
+elseif	self.X2 == Far.Width
+and	self.Y1 == 0
 then	self.align_id = 9
-elseif	self.X1 == 0 and
-	self.Y2 == Far.Height
+elseif	self.X1 == 0
+and	self.Y2 == Far.Height
 then	self.align_id = 1
-elseif	self.X1 == 0 and
-	self.YC
+elseif	self.X1 == 0
+and	self.YC
 then	self.align_id = 4
-elseif	self.XC and
-	self.Y1 == 0
+elseif	self.XC
+and	self.Y1 == 0
 then	self.align_id = 8
-elseif	self.X2 == Far.Width and
-	self.YC
+elseif	self.X2 == Far.Width
+and	self.YC
 then	self.align_id = 6
-elseif	self.XC and
-	self.Y2 == Far.Height
+elseif	self.XC
+and	self.Y2 == Far.Height
 then	self.align_id = 2
-elseif	self.XC and
-	self.YC
+elseif	self.XC
+and	self.YC
 then	self.align_id = 5
 end
-if	self.align_id then
-	self.align_str = tbl_posmod_types[self.align_id]
+if	self.align_id
+then	self.align_str = tbl_posmod_types[self.align_id]
 end
 return	self
 -- @@@ fnc_prep
@@ -744,6 +749,7 @@ then	op_code = "AlignCenterCenter"
 	delta_X = (Far.Width - dlg_crd.W) / 2 - dlg_crd.X1
 	delta_Y = (Far.Height- dlg_crd.H) / 2 - dlg_crd.Y1
 elseif	the_key =="CtrlAltRight"
+or	the_key =="CtrlShiftRight"
 then	op_code = "MoveRight"
 	delta_X = 1
 	delta_Y = 0
@@ -820,8 +826,9 @@ if aligned then
 		X2 = targetW and (dlg_crd.X1 + targetW - 1) or dlg_crd.X2 + (delta_X or 0);
 		Y2 = targetH and (dlg_crd.Y1 + targetH - 1) or dlg_crd.Y2 + (delta_Y or 0);
 			})
-	if dlg_crd.align_id and dlg_crd.align_id ~= tbl_posmod_ids[op_code] then
-		op_code = dlg_crd.align_str
+	if	dlg_crd.align_id
+	and	dlg_crd.align_id ~= tbl_posmod_ids[op_code]
+	then	op_code = dlg_crd.align_str
 	end
 end
 return {
@@ -865,16 +872,16 @@ end
 local function fnc_gmtr_calc(dlg_gmtr, dlg_place, dlg_size)
 	dlg_gmtr.X	= dlg_place	and dlg_place.X	or dlg_gmtr.Left or dlg_gmtr.X1 or dlg_gmtr.X
 	dlg_gmtr.Y	= dlg_place	and dlg_place.Y	or dlg_gmtr.Top	 or dlg_gmtr.Y1 or dlg_gmtr.Y
-	dlg_gmtr.W	= dlg_size	and dlg_size.X	or
-		dlg_gmtr.Left	and (dlg_gmtr.Right - dlg_gmtr.Left + 1) or
-		dlg_gmtr.X1	and (dlg_gmtr.X2 - dlg_gmtr.X1 + 1) or
-		dlg_gmtr.Width	or
-		dlg_gmtr.W
-	dlg_gmtr.H	= dlg_size	and dlg_size.Y	or
-		dlg_gmtr.Bottom and (dlg_gmtr.Bottom - dlg_gmtr.Top + 1) or
-		dlg_gmtr.Y1	and (dlg_gmtr.Y2 - dlg_gmtr.Y1 + 1) or
-		dlg_gmtr.Height or
-		dlg_gmtr.H
+	dlg_gmtr.W	= dlg_size	and dlg_size.X
+		or dlg_gmtr.Left and (dlg_gmtr.Right -	dlg_gmtr.Left+1)
+		or dlg_gmtr.X1	and ( dlg_gmtr.X2 -	dlg_gmtr.X1 + 1)
+		or dlg_gmtr.Width
+		or dlg_gmtr.W
+	dlg_gmtr.H	= dlg_size and dlg_size.Y
+		or dlg_gmtr.Bottom and( dlg_gmtr.Bottom -dlg_gmtr.Top+ 1)
+		or dlg_gmtr.Y1	and (	dlg_gmtr.Y2	-dlg_gmtr.Y1 + 1)
+		or dlg_gmtr.Height
+		or dlg_gmtr.H
 	dlg_gmtr.X1	= dlg_gmtr.X
 	dlg_gmtr.Y1	= dlg_gmtr.Y
 	dlg_gmtr.X2	= dlg_gmtr.X + dlg_gmtr.W - 1
@@ -909,8 +916,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	local	layout_cmd_wid, layout_cmd_pos, wid_mod, pos_mod, dei, deii, dio, is_menu, eltp,
 		dlg_data, dlg_xuid, dlg_sign, dlg_titles, dlg_place, dlg_size, dlg_crd, targ_W,
 		dlg_guid_0, dlg_guid_0_cnt, dlg_type_sign, crc64_t, crc64_s, file_curr,
-		guess_area, wid_adj, is_safe_id,
-		area_dlg_guid, tbl_volatiles
+		guess_area, wid_adj, is_safe_id, area_dlg_guid, tbl_volatiles, dlg_H, dlg_D
 	local	dlg_elems, dlg_elszs, dlg_obsts, dlg_info_sign, tbl_layout_operations = {}, {}, {}, {}, {}
 	local	dlg_guid	= _dlg_guid
 	local	dlg_guid_own	= _dlg_guid_own
@@ -928,6 +934,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		end
 	end
 	file_curr = fnc_file_curr()
+	dlg_H = _dlg_handles[dlg_hnd_str]
 	local t_crc_1 = Far.UpTime
 	if not	is_safe_id
 	then	crc64_t = _crc64:new()
@@ -952,7 +959,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		dlg_elszs[deii] = { dei[1], dei[2], dei[3], dei[4], dei[5], dei[6], dei[7], dei[8], dei[9], dei[10]}
 		if dei[4] == 0 then dlg_elszs[deii][4] = dei[2] end
 		if dei[5] == 0 then dlg_elszs[deii][5] = dei[3] end
-		area_dlg_guid = _dlg_handles[dlg_hnd_str].mcr_area.."#"..(dlg_guid or GUID_ZERO)
+		area_dlg_guid = (dlg_H.mcr_area).."#"..(dlg_guid or GUID_ZERO)
 		tbl_volatiles = _dlg_volt_items[area_dlg_guid]
 		if not	is_safe_id
 		then	if	dlg_is_menu == "M"
@@ -1007,23 +1014,23 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		end
 		if	Area.Current	== "MainMenu" and is_menu_likely
 		then	guess_area	=  "MainMenu";	  is_menu = true
-		elseif 	dlg_type_sign	== "{Flags&Id&Name&Pos&Type&TypeName}" and
-			is_menu_likely and (
-				Area.Current	== "UserMenu" or
-				_last_key	== "F2" or
-				_last_key:match("Enter") and Area.Current == "UserMenu" or
-				_last_area	== "UserMenu"
-					)
+		elseif 	dlg_type_sign	== "{Flags&Id&Name&Pos&Type&TypeName}"
+		and	is_menu_likely
+		and (	Area.Current	== "UserMenu"
+		or	_last_key	== "F2"
+		or	_last_key:match("Enter")
+		and	Area.Current	== "UserMenu"
+		or	_last_area	== "UserMenu")
 		then	guess_area	=  "UserMenu"	; is_menu = true
-		elseif  is_menu_likely and
-			dlg_titles and (
-				string.match(dlg_titles.Title, "^Change drive") and
-				string.match(dlg_titles.Bottom, "^Del Shift+Del F3 F4 F9$")
-				or _dlg_handles[dlg_hnd_str].mcr_area == "Disks"
-					)
+		elseif  is_menu_likely
+		and	dlg_titles
+		and (	string.match(dlg_titles.Title,	"^Change drive")
+		and	string.match(dlg_titles.Bottom, "^Del Shift+Del F3 F4 F9$")
+		or	dlg_H.mcr_area == "Disks")
 		then	guess_area	=  "DiskMenu"	; is_menu = true
-		elseif	is_menu_likely and
-			(dlg_type_sign	== "{Flags&Id&Name&Pos&Type&TypeName}" or dlg_guid)
+		elseif	is_menu_likely
+		and (	dlg_type_sign	== "{Flags&Id&Name&Pos&Type&TypeName}"
+		or	dlg_guid)
 		then	guess_area	=  "Menu"	; is_menu = true
 		else	guess_area	=  "Dialog"	; is_menu = false
 		end
@@ -1043,7 +1050,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			end
 			if not	is_safe_id and is_menu
 			then	if dlg_titles.Title	then crc64_t:fnc_append("[HEADER:] "..dlg_titles.Title)	end
-				if dlg_titles.Bottom	then crc64_t:fnc_append("[FOOTER:] "..dlg_titles.Bottom)	end
+				if dlg_titles.Bottom	then crc64_t:fnc_append("[FOOTER:] "..dlg_titles.Bottom)end
 			end
 		end
 		dlg_sign =
@@ -1081,7 +1088,8 @@ local function fnc_action(sender, msg, dlg_is_menu)
 					Y1 = dlg_elszs[dejj][3],
 					X2 = dlg_elszs[dejj][4],
 					Y2 = dlg_elszs[dejj][5],
-					Tx = dlg_elszs[dejj][6]}
+					Tx = dlg_elszs[dejj][6]
+				}
 				if	dej.X1 >= dei.X2 and (
 					dej.Y1 >= dei.Y1 and dej.Y1 <= dei.Y2 or
 				 	dej.Y2 >= dei.Y1 and dej.Y2 <= dei.Y2 or
@@ -1092,15 +1100,17 @@ local function fnc_action(sender, msg, dlg_is_menu)
 					dej.Y1 >= dei.Y1 and dej.Y1 <= dei.Y2 or
 				 	dej.Y2 >= dei.Y1 and dej.Y2 <= dei.Y2 or
 				 	dej.Y1 <= dei.Y1 and dej.Y2 >= dei.Y2)
-				then	deo[dejj] = {X = dej.X2, B = dej.X2 == dei.X2, T = "X2", D = dej.X2 - dei.X2}
+				then	deo[dejj] = { X = dej.X2, B = dej.X2 == dei.X2, T = "X2", D = dej.X2 - dei.X2 }
 				end
-				if deo[dejj] then dlg_sign = ("%sO:(E=%x/J=%s/G=%s/A=%s)\n"):format(dlg_sign, dejj, CTLs[dej.Ty]:lower(), deo[dejj].B and "N" or "M", deo[dejj].T == "X1" and "U" or "V") end
+				if deo[dejj]
+				then dlg_sign = ("%sO:(E=%x/J=%s/G=%s/A=%s)\n"):format(dlg_sign, dejj, CTLs[dej.Ty]:lower(), deo[dejj].B and "N" or "M", deo[dejj].T == "X1" and "U" or "V")
+				end
 			end end
-			if	#deo == 0 then
-				deo[-1] = { X = dlg_width, B = false, T = "X2", D = dlg_width - dei.X2 + 0 };
+			if	#deo == 0
+			then	deo[-1] = { X = dlg_width, B = false, T = "X2", D = dlg_width - dei.X2 + 0 }
 				dlg_sign = ("%sO:(N)"):format(dlg_sign)
 			end
-			dlg_obsts[deii] = deo;
+			dlg_obsts[deii] = deo
 		end
 		local	dlg_sign_crc64_int,
 			dlg_sign_crc64_str
@@ -1124,42 +1134,43 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			end
 			tbl_id_stats[dlg_sign_crc64_str] = (tbl_id_stats[dlg_sign_crc64_str] or 0) + 1
 		end
-		if not	_dlg_data[dlg_xuid]
-		then	_dlg_data[dlg_xuid] = {
-				guid	= dlg_guid,
-				guid_vlt= dlg_guid_vlt and dlg_guid ~= dlg_guid_vlt and dlg_guid_vlt or nil,
-				named_id= tbl_far_guid_names[dlg_guid_vlt],
-				xuid	= dlg_xuid,
-				crc64	= dlg_sign_crc64_str,
-				area	= guess_area,
-				is_menu	= is_menu
-					}
+		dlg_D = _dlg_data[dlg_xuid]
+		if not	dlg_D
+		then	dlg_D = { dt_added = Far.UpTime }
+			_dlg_data[dlg_xuid] = dlg_D
 		end
-		_dlg_data[dlg_xuid].crc_t	= t_crc_2 - t_crc_1
-		_dlg_data[dlg_xuid].text_head	= dlg_titles and dlg_titles.Title
-		_dlg_data[dlg_xuid].text_foot	= dlg_titles and dlg_titles.Bottom
+		dlg_D.crc_t	= t_crc_2 - t_crc_1
+		dlg_D.guid	= dlg_guid
+		dlg_D.xuid	= dlg_xuid
+		dlg_D.crc64	= dlg_sign_crc64_str
+		dlg_D.guid_vlt	= dlg_guid_vlt and dlg_guid ~= dlg_guid_vlt and dlg_guid_vlt or nil
+		dlg_D.named_id	= tbl_far_guid_names[dlg_guid_vlt]
+		dlg_D.area	= guess_area
+		dlg_D.is_menu	= is_menu
+		dlg_D.text_head	= dlg_titles and dlg_titles.Title
+		dlg_D.text_foot	= dlg_titles and dlg_titles.Bottom
 		-- these dlg_obsts, gmtr, elems, affnt, +open time required only as initial for the dialog:
-		_dlg_data[dlg_xuid].obstacles	= fnc_tbl_copy(dlg_obsts)
-		_dlg_data[dlg_xuid].gmtr_orig	= fnc_tbl_copy(dlg_gmtr)
-		_dlg_data[dlg_xuid].elms_orig	= fnc_tbl_copy(dlg_elems)
-		_dlg_data[dlg_xuid].affnt_lr	= dlg_afnLR
-		_dlg_data[dlg_xuid].dt_opened	= os.time()
-		_dlg_handles[dlg_hnd_str].xuid	=	dlg_xuid
-		_dlg_handles[dlg_hnd_str].dt_detect =	Far.UpTime
-		_dlg_handles[dlg_hnd_str].named_id =	_dlg_data[dlg_xuid].named_id
-		_dlg_handles[dlg_hnd_str].text_top =	_dlg_data[dlg_xuid].text_head
-		_dlg_handles[dlg_hnd_str].text_low =	_dlg_data[dlg_xuid].text_foot
-		if not	Xer0X.DLG_TRACK_OFF
+		dlg_D.obstacles	= fnc_tbl_copy(dlg_obsts)
+		dlg_D.gmtr_orig	= fnc_tbl_copy(dlg_gmtr)
+		dlg_D.elms_orig	= fnc_tbl_copy(dlg_elems)
+		dlg_D.affnt_lr	= dlg_afnLR
+		dlg_D.dt_opened	= Far.UpTime
+
+		dlg_H.xuid	=dlg_xuid
+		dlg_H.dt_detect= Far.UpTime
+		dlg_H.named_id = dlg_D.named_id
+		dlg_H.text_top = dlg_D.text_head
+		dlg_H.text_low = dlg_D.text_foot
+		if	Xer0X.DLG_TRACK_STATE > 0
 		then
-			if not	is_menu
-			then
+			if not	is_menu then
 			end
 			local	dlg_menu_list_item_idx_by_pos,
 				dlg_menu_list_item_by_str, res_comp_name,
 				menu_sel_res, menu_item_text_fix, is_masked
-			local	menu_ret_pos_sel = _dlg_data[dlg_xuid].menu_pos_sel
-			local	menu_ret_val_str = _dlg_data[dlg_xuid].menu_val_str
-			local	menu_ret_disable = _dlg_exc_ret_ids[dlg_guid]
+			local	menu_ret_pos_sel = dlg_D.menu_pos_sel
+			local	menu_ret_val_str = dlg_D.menu_val_str
+			local	menu_ret_disable = _dlg_exc_ret_ids[dlg_guid] and Xer0X.DLG_TRACK_STATE ~= 2
 			if	is_menu
 			and not	menu_ret_disable
 			and	menu_ret_pos_sel
@@ -1195,7 +1206,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 				if	dlg_menu_list_item_by_pos
 				then
 					menu_item_text_fix = fnc_norm_menu_value(dlg_menu_list_item_by_pos.Text)
-					if	menu_item_text_fix == _dlg_data[dlg_xuid].menu_val_str
+					if	menu_item_text_fix == dlg_D.menu_val_str
 					or	is_masked and (
 							far.ProcessName(PN_CMPNAMELIST, menu_ret_val_str, dlg_menu_list_item_by_pos.Text)
 						or	far.ProcessName(PN_CMPNAMELIST, menu_ret_val_str, menu_item_text_fix)
@@ -1208,87 +1219,89 @@ local function fnc_action(sender, msg, dlg_is_menu)
 					end
 				end
 			end
-			if _dlg_data[dlg_xuid].widmod
+			if dlg_D.widmod
 			then    tbl_layout_operations[#tbl_layout_operations + 1] = {
 					op_key = ACT_KEY_F5,
-					the_mod = tbl_widmod_types[_dlg_data[dlg_xuid].widmod]
+					the_mod = tbl_widmod_types[dlg_D.widmod]
 						}
 			end
-			if _dlg_data[dlg_xuid].posmod
+			if dlg_D.posmod
 			then
 				local	the_mod
-				local	pos_mod_data = _dlg_data[dlg_xuid].posmod
+				local	pos_mod_data = dlg_D.posmod
 				local 	pos_mod_data_type = type(pos_mod_data)
 				local 	pos_mod_str, pos_mod_key
 				if	pos_mod_data_type == "number"
 				then 	pos_mod_str = tbl_posmod_types[pos_mod_data]
-					pos_mod_key = tbl_posmod_keys[pos_mod_str]
+					pos_mod_key = tbl_posmod_keys [pos_mod_str ]
 				elseif	pos_mod_data_type == "table"
 				then	
 					pos_mod_key = "CtrlAltF123"
 					the_mod = pos_mod_data
 				end
 				tbl_layout_operations[#tbl_layout_operations + 1] = {
-					op_key = pos_mod_key, the_mod = the_mod
+					op_key = pos_mod_key,
+					the_mod = the_mod
 				}
 			end
 		end -- of "IF Track Allowed .."
 	elseif
 		sender == "macro"
 	then
-		if not	Xer0X.DLG_TRACK_OFF
+		if	Xer0X.DLG_TRACK_STATE > 0
 		then
-			dlg_xuid = _dlg_handles[dlg_hnd_str].xuid
+			dlg_xuid = dlg_H.xuid
+			dlg_D = _dlg_data[dlg_xuid]
 			if
 				msg == "CtrlAltR"
 			then
-				_dlg_data[dlg_xuid].pers = true
+				dlg_D.pers = true
 			else
 				--[[ created and saved in event,
 				but for key macro need to fetch it from storage:]]
-				dlg_obsts = _dlg_data[dlg_xuid].obstacles
+				dlg_obsts = dlg_D.obstacles
 				tbl_layout_operations[#tbl_layout_operations + 1] = {
 					op_key = msg,
-					the_mod = msg == ACT_KEY_F5 and
-						fnc_widmod_state_machine(tbl_widmod_types[_dlg_data[dlg_xuid].widmod], _dlg_data[dlg_xuid].wid_cust)
-							or nil
+					the_mod = msg == ACT_KEY_F5
+						and fnc_widmod_state_machine(tbl_widmod_types[dlg_D.widmod], dlg_D.wid_cust)
+						or nil
 					}
 			end
 		end -- of "IF TrackOff .."
 	end
 	::fix_alignment::
 	local wid_adj_loop = false
-	for ii_op = 1, #tbl_layout_operations do
-		local op_cmd, dlg_crd = fnc_calc_move(
+	for ii_op = 1, #tbl_layout_operations
+	do	local op_cmd, dlg_crd = fnc_calc_move(
 			tbl_layout_operations[ii_op].op_key,
 			tbl_layout_operations[ii_op].the_mod,
 			-- initial saved:
-			_dlg_data[dlg_xuid].affnt_lr,
+			dlg_D.affnt_lr,
 			--[[! the current:]]dlg_gmtr,
-			_dlg_data[dlg_xuid].gmtr_orig,
-			_dlg_data[dlg_xuid].wid_cust
-				)
+			dlg_D.gmtr_orig,
+			dlg_D.wid_cust
+		)
 		local	dlg_place_tmp, dlg_size_tmp = fnc_layout_cmd_exec(op_cmd, dlg_gmtr)
 		dlg_gmtr = fnc_gmtr_calc(dlg_gmtr, dlg_place_tmp, dlg_size_tmp)
 		local	wid_mod_id = dlg_size_tmp  and tbl_widmod_ids[op_cmd.op_code]
 		local	pos_mod_id = dlg_place_tmp and tbl_posmod_ids[op_cmd.op_code]
-		if	wid_mod_id then
-			_dlg_data[dlg_xuid].widmod = wid_mod_id
-			if op_cmd.op_code == "WidthCustom" then
-				_dlg_data[dlg_xuid].wid_cust = dlg_size_tmp.X
+		if	wid_mod_id
+		then	dlg_D.widmod = wid_mod_id
+			if op_cmd.op_code == "WidthCustom"
+			then dlg_D.wid_cust = dlg_size_tmp.X
 			end
 			wid_adj_loop = true
 			wid_adj = true
 		end
-		if	pos_mod_id then
-			_dlg_data[dlg_xuid].posmod = op_cmd.aligned and (op_cmd.algn_id or pos_mod_id) or dlg_place_tmp
+		if	pos_mod_id 
+		then	dlg_D.posmod = op_cmd.aligned and (op_cmd.algn_id or pos_mod_id) or dlg_place_tmp
 		end
 	end
-	if wid_adj_loop and tbl_aligned[_dlg_data[dlg_xuid].posmod]
+	if wid_adj_loop and tbl_aligned[dlg_D.posmod]
 	then
-		local dlg_gmtr_test = dlg_coord.fnc_prep(nil, dlg_gmtr)
-		if dlg_gmtr_test.align_id ~= _dlg_data[dlg_xuid].posmod then
-			tbl_layout_operations = {{op_key = tbl_posmod_keys[_dlg_data[dlg_xuid].posmod]}}
+		local	dlg_gmtr_test = dlg_coord.fnc_prep(nil, dlg_gmtr)
+		if	dlg_gmtr_test.align_id ~= dlg_D.posmod
+		then	tbl_layout_operations = { { op_key = tbl_posmod_keys[dlg_D.posmod] } }
 			goto fix_alignment
 		end
 	end
@@ -1296,9 +1309,9 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	if wid_adj then
 	--[[ always current required,
 	probably table copy is not needed:]]
-	_dlg_data[dlg_xuid].gmtr_curr	= dlg_gmtr	
-	_dlg_data[dlg_xuid].elm_sizes	= dlg_elszs	
-	_dlg_data[dlg_xuid].elms_curr	= dlg_elems	
+	dlg_D.gmtr_curr = dlg_gmtr 
+	dlg_D.elm_sizes = dlg_elszs
+	dlg_D.elms_curr = dlg_elems
 	targ_W = dlg_gmtr.W
 	local total_height = 0
 	for	deii, _dei in pairs(dlg_elszs)
@@ -1307,10 +1320,10 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		total_height = math.max(math.max(total_height, dei[5]), dei[3]) 
 		-- menu with zero width:
 		if	dei[1] == 11
-		and	dei[2] == 0
-		and	dei[3] == 0
-		and	dei[4] == 0
-		then	dei[4] = 1
+		and	dei[2] ==  0
+		and	dei[3] ==  0
+		and	dei[4] ==  0
+		then	dei[4] =   1
 		end
 		if	rest_orig
 		then	if	elem_orig_x2 ~= dlg_elszs[deii][4]
@@ -1345,7 +1358,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 			dei[10]:len() > 0
 		then	local 	max_size = (elm_lim and dlg_elems[elm_lim_idx][4] or targ_W) - dei[2] - 3
 			local 	str_orig =
-					fnc_trim_R(_dlg_data[dlg_xuid].elms_orig[deii][10])
+					fnc_trim_R(dlg_D.elms_orig[deii][10])
 			local 	str_rest = fnc_rest_long_file_name(str_orig, max_size)
 			if	str_rest
 			then	far.SendDlgMessage(_hDlg, DM_SETTEXT, deii, str_rest)
@@ -1529,114 +1542,23 @@ local function fnc_close_countdown(tmr_sender, dlg_hnd_str, dt_closing, force_cl
 	dlg_hand.is_closing = false
 end
 
-Event { description = "[ReXiZeR] ultra total dialog and menu windows resizer";
-	group = "DialogEvent";
-	action = function(evt, fde)
--- ###
-local	dt_now = Far.UpTime
-local	dlg_data
-local	dlg_draw  = evt == DE_DLGPROCINIT and fde.Msg == DN_DRAWDIALOGDONE
-local	dlg_init  = evt == DE_DLGPROCINIT and fde.Msg == DN_INITDIALOG
-local	dlg_close = evt == DE_DLGPROCINIT and fde.Msg == DN_CLOSE
-local	dlg_hnd_str = tostring(fde.hDlg)
-local	dlg_hand = _dlg_handles[dlg_hnd_str]
-if	dlg_hand
-and	dlg_hand.is_closing
-and (	dlg_hand.is_closed or dlg_init)
-then	fnc_close_countdown(dlg_hand.tmr_close_countdown, dlg_hnd_str, dt_now, true)
-elseif
-not	dlg_hand
-then	dlg_hand = { handle_str = dlg_hnd_str, hanlde = fde.hDlg, dt_init = dt_now }
-	_dlg_handles[dlg_hnd_str] = dlg_hand
-end
-if	dlg_init
-then
-	dlg_hand.dt_init	= dt_now
-	dlg_hand.evt_cnt	= 0
-	dlg_hand.dlg_infos	= {}
-	dlg_hand.dlg_infos_cnt	= nil
-	dlg_hand.dlg_infos_dt	= nil
-	dlg_hand.mcr_cnt_ch_dlg = 0
-	dlg_hand.mcr_cnt_no_wnd = 0
-	dlg_hand.dt_mcr		= 0
-	dlg_hand.dt_mcr_launch	= 0
-	dlg_hand.mcr_relaunch = false
-	dlg_hand.dlg_inf_bak = nil
-	dlg_hand.mcr_inf_win = nil
-	dlg_hand.mcr_inf_dlg = nil
-	dlg_hand.is_closing = false
-	dlg_hand.is_closed = false
-end
-dlg_hand.dt_updated = dt_now
-dlg_hand.evt_updated = { evt = evt, fde = fde }
-if
-	evt == DE_DLGPROCINIT and (
-		fde.Msg == DN_INPUT or
-		fde.Msg == DN_CONTROLINPUT
-			)
-then	dlg_hand.evt_cnt = (dlg_hand.evt_cnt or 0) + 1
-end
-if	fde.Msg ~= DN_ENTERIDLE
-and	fde.Msg ~= DN_INPUT
-and	fde.Msg ~= DN_CONTROLINPUT
-and	fde.Msg ~= DN_GOTFOCUS
-and	fde.Msg ~= DN_KILLFOCUS
-then
-end
-
-if 	dlg_hand.xuid
-then	dlg_data = _dlg_data[dlg_hand.xuid]
-end
-
-
-if
-	dlg_close
-then
-	if not	Xer0X.DLG_TRACK_OFF
-	and	dlg_data
-	and	dlg_data.is_menu
-	and not _dlg_exc_ret_ids[dlg_data.guid]
-	then	if 	dlg_data.guid == Menu.Id or (
-			dlg_data.guid == nil and (
-				Area.Current == "MainMenu" or
-				Area.Current == "UserMenu"
-					) and
-			Menu.Id == GUID_ZERO
-				)
-		then    local	tbl_menu_sel = fde.hDlg:send("DM_LISTGETCURPOS", 1)
-			if	tbl_menu_sel.SelectPos == 1
-			and	false
-			then	
-			else
-				dlg_data.menu_pos_sel = tbl_menu_sel.SelectPos
-				dlg_data.menu_pos_top = tbl_menu_sel.TopPos
-				dlg_data.menu_val_str =
-					dlg_data.menu_vals_map and
-					dlg_data.menu_vals_map.new_to_val[Menu.Value]
-						or Menu.Value
-			end
-		end
-	end
-	if	dlg_hand.xuid == FAR_EXIT_MSG_DLG_ID_TXT
-	then	fnc_dlg_data_store()
-	end
-	if not	dlg_hand.is_closing
-	then
-		dlg_hand.is_closing = true
-		dlg_hand.dt_closing = dt_now
-		dlg_hand.tmr_close_countdown = far.Timer(5, fnc_close_countdown, dlg_hnd_str, dt_now)
-	end
-elseif
-	dlg_init
-then
-	if not	dlg_hand.tmr_init
-	or	dlg_hand.tmr_init.Closed
-	then	dlg_hand.tmr_init = fnc_event_async_safe(dlg_hand.tmr_init, evt, fde)
+local function fnc_cfg_dlg_exec(cfg_data, from_area)
+	local dlg = far2dlg.NewDialog()
+	dlg.dbxFrame		= { "DI_DOUBLEBOX",3, 1,42, 8, 0, 0, 0, 0,						lng_msg.MPluginSettings }
+	dlg.ReloadDefaultScript = { "DI_CHECKBOX", 6, 2, 0, 0, 0, 0, 0, 0,						lng_msg.MReloadDefaultScript }
+	dlg.RequireWithReload	= { "DI_CHECKBOX", 6, 3, 0, 0, 0, 0, 0, 0,						lng_msg.MRequireWithReload }
+	dlg.UseStrict		= { "DI_CHECKBOX", 6, 4, 0, 0, 0, 0, 0, 0,						lng_msg.MUseStrict }
+	dlg.ReturnToMainMenu	= { "DI_CHECKBOX", 6, 5, 0, 0, 0, 0, 0, 0,						lng_msg.MReturnToMainMenu }
+	dlg.sep			= { "DI_TEXT",     0, 6, 0, 0, 0, 0, 0, { DIF_BOXCOLOR	= 1,	DIF_SEPARATOR	= 1 },	"" }
+	dlg.btnOk		= { "DI_BUTTON",   0, 7, 0, 0, 0, 0, 0, { DIF_CENTERGROUP= 1,	DIF_DEFAULTBUTTON=1 },	lng_msg.MOk }
+	dlg.btnCancel		= { "DI_BUTTON",   0, 7, 0, 0, 0, 0, 0, "DIF_CENTERGROUP",				lng_msg.MCancel }
+	far2dlg.LoadData(dlg, cfg_data)
+	local ret = far.Dialog(dlg_cfg_id, -1, -1, 46, 10, "PluginConfig", dlg)
+	if ret == dlg.btnOk.id
+	then	far2dlg.SaveData(dlg, cfg_data)
+		return true
 	end
 end
--- @@@ END OF DialogEvent FUNCTION
-	end
-}
 
 local function fnc_macro_prep_work()
 	local the_key = akey(1, 0)
@@ -1663,12 +1585,118 @@ local function fnc_macro_prep_work()
 	return true, the_key
 end
 
-local str_title = "[ReXiZeR] Resize dialogs && other sub-windows @Xer0X"
-local str_areas_of_interest = string.lower("Other Dialog MainMenu Menu UserMenu Disks Search ShellAutoCompletion")
-Macro { description = str_title;
+Event { description = "[ReXiZeR] ultra total dialog and menu windows resizer";
+	group = "DialogEvent";
+	action = function(evt, fde)
+-- ###
+local	dt_now = Far.UpTime
+local	dlg_data
+local	dlg_draw  = evt == DE_DLGPROCINIT and fde.Msg == DN_DRAWDIALOGDONE
+local	dlg_init  = evt == DE_DLGPROCINIT and fde.Msg == DN_INITDIALOG
+local	dlg_close = evt == DE_DLGPROCINIT and fde.Msg == DN_CLOSE
+local	dlg_hnd_str = tostring(fde.hDlg)
+local	dlg_hand = _dlg_handles[dlg_hnd_str]
+if	dlg_hand
+and	dlg_hand.is_closing
+and (	dlg_hand.is_closed
+or	dlg_init)
+then	fnc_close_countdown(dlg_hand.tmr_close_countdown, dlg_hnd_str, dt_now, true)
+elseif
+not	dlg_hand
+then	dlg_hand = { handle_str = dlg_hnd_str, hanlde = fde.hDlg, dt_init = dt_now }
+	_dlg_handles[dlg_hnd_str] = dlg_hand
+end
+if	dlg_init
+then
+	dlg_hand.dt_init	= dt_now
+	dlg_hand.evt_cnt	= 0
+	dlg_hand.dlg_infos	= {}
+	dlg_hand.dlg_infos_cnt	= nil
+	dlg_hand.dlg_infos_dt	= nil
+	dlg_hand.mcr_cnt_ch_dlg = 0
+	dlg_hand.mcr_cnt_no_wnd = 0
+	dlg_hand.dt_mcr		= 0
+	dlg_hand.dt_mcr_launch	= 0
+	dlg_hand.mcr_relaunch = false
+	dlg_hand.dlg_inf_bak = nil
+	dlg_hand.mcr_inf_win = nil
+	dlg_hand.mcr_inf_dlg = nil
+	dlg_hand.is_closing = false
+	dlg_hand.is_closed = false
+end
+dlg_hand.dt_updated = dt_now
+dlg_hand.evt_updated = { evt = evt, fde = fde }
+if 
+	evt == DE_DLGPROCINIT
+and (	fde.Msg == DN_INPUT
+or	fde.Msg == DN_CONTROLINPUT)
+then	dlg_hand.evt_cnt = (dlg_hand.evt_cnt or 0) + 1
+end
+if	fde.Msg ~= DN_ENTERIDLE
+and	fde.Msg ~= DN_INPUT
+and	fde.Msg ~= DN_CONTROLINPUT
+and	fde.Msg ~= DN_GOTFOCUS
+and	fde.Msg ~= DN_KILLFOCUS
+then
+end
+
+if 	dlg_hand.xuid
+then	dlg_data = _dlg_data[dlg_hand.xuid]
+end
+
+if	dlg_close
+then
+	if	Xer0X.DLG_TRACK_STATE > 0
+	and	dlg_data
+	and	dlg_data.is_menu
+	and not(dlg_data.guid and _dlg_exc_ret_ids[dlg_data.guid]
+	and	Xer0X.DLG_TRACK_STATE ~= 2)
+	then	
+		if 	dlg_data.guid == Menu.Id
+		or (	dlg_data.guid == nil
+		and (	Area.Current == "MainMenu"
+		or	Area.Current == "UserMenu")
+		and	Menu.Id == GUID_ZERO)
+		then    local	tbl_menu_sel = fde.hDlg:send("DM_LISTGETCURPOS", 1)
+			if	tbl_menu_sel.SelectPos == 1
+			and	false
+			then	
+			else
+				dlg_data.menu_pos_sel = tbl_menu_sel.SelectPos
+				dlg_data.menu_pos_top = tbl_menu_sel.TopPos
+				dlg_data.menu_val_str =
+						dlg_data.menu_vals_map
+					and     dlg_data.menu_vals_map.new_to_val[Menu.Value]
+					or	Menu.Value
+			end
+		end
+	end
+	if	dlg_hand.xuid == FAR_EXIT_MSG_DLG_ID_TXT
+	then	fnc_dlg_data_store()
+	end
+	if not	dlg_hand.is_closing
+	then
+		dlg_hand.is_closing = true
+		dlg_hand.dt_closing = dt_now
+		dlg_hand.tmr_close_countdown = far.Timer(5, fnc_close_countdown, dlg_hnd_str, dt_now)
+	end
+elseif
+	dlg_init
+then
+	if not	dlg_hand.tmr_init
+	or	dlg_hand.tmr_init.Closed
+	then	dlg_hand.tmr_init = fnc_event_async_safe(dlg_hand.tmr_init, evt, fde)
+	end
+end
+-- @@@ END OF DialogEvent FUNCTION
+	end
+}
+
+Macro { description = opts.TITLE;
 	id = "B4536879-7071-4619-8F9C-6DBE59E3B6E2";
-	area = str_areas_of_interest;
-	priority = 0; sortpriority = 0;
+	area = opts.AREAS_OF_INTEREST;
+	priority = 0;
+	sortpriority = 0;
 	condition = function(the_key, sender)
 -- ###
 return not the_key:find("Alt"..ACT_KEY_F5) or _has_own_F5;
@@ -1695,7 +1723,8 @@ end
 	end;
 }
 
-Macro { description = string.gsub(str_title, " Resize ", " Persist ");
+Macro { description = string.gsub(opts.TITLE, " Resize ", " Persist ");
+	id = "40B33381-8D28-4FAE-A54D-5D30D400FD88";
 	area = "Common"; 
 	key = "CtrlAltR-R";
 	action = function(sender)
@@ -1724,30 +1753,12 @@ end;
 	action = function() end;
 }
 
-local function fnc_cfg_dlg_exec(cfg_data, from_area)
-	local dlg = far2dlg.NewDialog()
-	dlg.dbxFrame		= { "DI_DOUBLEBOX",3, 1,42, 8, 0, 0, 0, 0,						lng_msg.MPluginSettings }
-	dlg.ReloadDefaultScript = { "DI_CHECKBOX", 6, 2, 0, 0, 0, 0, 0, 0,						lng_msg.MReloadDefaultScript }
-	dlg.RequireWithReload	= { "DI_CHECKBOX", 6, 3, 0, 0, 0, 0, 0, 0,						lng_msg.MRequireWithReload }
-	dlg.UseStrict		= { "DI_CHECKBOX", 6, 4, 0, 0, 0, 0, 0, 0,						lng_msg.MUseStrict }
-	dlg.ReturnToMainMenu	= { "DI_CHECKBOX", 6, 5, 0, 0, 0, 0, 0, 0,						lng_msg.MReturnToMainMenu }
-	dlg.sep			= { "DI_TEXT",     0, 6, 0, 0, 0, 0, 0, { DIF_BOXCOLOR	= 1,	DIF_SEPARATOR	= 1 },	"" }
-	dlg.btnOk		= { "DI_BUTTON",   0, 7, 0, 0, 0, 0, 0, { DIF_CENTERGROUP= 1,	DIF_DEFAULTBUTTON=1 },	lng_msg.MOk }
-	dlg.btnCancel		= { "DI_BUTTON",   0, 7, 0, 0, 0, 0, 0, "DIF_CENTERGROUP",				lng_msg.MCancel }
-	far2dlg.LoadData(dlg, cfg_data)
-	local ret = far.Dialog(dlg_cfg_id, -1, -1, 46, 10, "PluginConfig", dlg)
-	if ret == dlg.btnOk.id
-	then	far2dlg.SaveData(dlg, cfg_data)
-		return true
-	end
-end
-
 MenuItem {
-	description = str_title.." (menu item)";
+	description = opts.TITLE.." (menu item)";
 	menu	= "Plugins Config";
 	guid	= "01D17E94-FB83-41EC-AF01-8721539AFDAA";
 	area	= "Dialog MainMenu Menu UserMenu Disks";
-	text	= function(menu, area, p3) return str_title..(menu == "Config" and " (Config)" or "") end;
+	text	= function(menu, area, p3) return opts.TITLE..(menu == "Config" and " (Config)" or "") end;
 	action	= function(open_from, item, p3)
 		if not	open_from
 		then	local	is_saved = fnc_cfg_dlg_exec(cfg_current, "config")
