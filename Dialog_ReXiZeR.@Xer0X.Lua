@@ -61,7 +61,7 @@ local Info = package.loaded.regscript or function(...) return ... end
 local nfo = Info { _filename or ...,
 	name		= "Dialog_ReXiZeR.@Xer0X.Lua";
 	description	= "Resizes and moves all the Far Manager internal windows";
-	version		= "1.2.5"; 
+	version		= "1.2.6"; 
 	author		= "Xer0X";
 	url		= "https://forum.farmanager.com/viewtopic.php?f=15&t=11924";
 	id		= "2862E9F8-C65C-44F6-8C2A-FD609977DAED";
@@ -153,8 +153,8 @@ local FAR_EXIT_MSG_DLG_ID_TXT	= "4EBBEFC8-2084-4B7F-94C0-692CE136894D"
 local LUA_EXPLORE_MENU_ID_TXT	= "7646F761-8954-42CA-9CFC-E3F98A1C54D3"
 local FAR_EXIT_MSG_DLG_ID_BIN	= win.Uuid(FAR_EXIT_MSG_DLG_ID_TXT)
 local tbl_menu_areas = { Menu = 1, UserMenu = 1, MainMenu = 1, Disks = 1, ShellAutoCompletion = 1, DialogAutoCompletion = 1 }
+local Xer0X = require("Lib-Common-@Xer0X")
 Xer0X.DLG_TRACK_STATE = 1
-require("Lib-Common-@Xer0X")
 require("introspection-@Xer0X")
 
 local fnc_file_whoami		= Xer0X.fnc_file_whoami
@@ -174,10 +174,10 @@ local	lng_msg = loadfile(lng_file_path)("load_as_module")
 local	dlg_file_path, far2dlg
 do      dlg_file_path = own_file_fold.."far2x_dialog"..own_file_extn
 end
-if not	Xer0X.fnc_file_exists(dlg_file_path)
+if not	fnc_file_exists(dlg_file_path)
 then	dlg_file_path = own_file_fold.."dialog"..own_file_extn
 end
-if	Xer0X.fnc_file_exists(dlg_file_path)
+if	fnc_file_exists(dlg_file_path)
 then	far2dlg = loadfile(dlg_file_path)("load_as_module")
 else	far2dlg = require("far2x.dialog")
 end
@@ -185,10 +185,10 @@ end
 local	hist_file_path, far2_hist
 do	hist_file_path = own_file_fold.."far2x_history"..own_file_extn
 end
-if not	Xer0X.fnc_file_exists(hist_file_path)
+if not	fnc_file_exists(hist_file_path)
 then	hist_file_path = own_file_fold.."history"..own_file_extn
 end
-if	Xer0X.fnc_file_exists(hist_file_path)
+if	fnc_file_exists(hist_file_path)
 then	far2_hist = loadfile(hist_file_path)("load_as_module")
 else	far2_hist = require("far2x.history")
 end
@@ -346,8 +346,8 @@ do
 	or not	fnc_file_exists(cfg_file_path)
 	then	fnc_dlg_conf_store()
 	end
-	_G.Xer0X.dlg_data = _dlg_data
-	_G.Xer0X.dlg_handles = _dlg_handles
+	Xer0X.dlg_data	=	_dlg_data
+	Xer0X.dlg_handles =	_dlg_handles
 end
 
 
@@ -917,7 +917,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		dlg_data, dlg_xuid, dlg_sign, dlg_titles, dlg_place, dlg_size, dlg_crd, targ_W,
 		dlg_guid_0, dlg_guid_0_cnt, dlg_type_sign, crc64_t, crc64_s, file_curr,
 		guess_area, wid_adj, is_safe_id, area_dlg_guid, tbl_volatiles, dlg_H, dlg_D
-	local	dlg_elems, dlg_elszs, dlg_obsts, dlg_info_sign, tbl_layout_operations = {}, {}, {}, {}, {}
+	local	dlg_elems, dlg_elszs, dlg_obsts, dlg_info_sign, tbl_layout_operations = { }, { }, { }, { }, { }
 	local	dlg_guid	= _dlg_guid
 	local	dlg_guid_own	= _dlg_guid_own
 	if	dlg_guid
@@ -939,21 +939,16 @@ local function fnc_action(sender, msg, dlg_is_menu)
 	if not	is_safe_id
 	then	crc64_t = _crc64:new()
 	end
+	local tbl_elm_chg_flg = { }
 	for	deii = 1, math.huge, 1
 	do	
-		local t_dlg_elm_get_1 = Far.UpTime
-		dei = _hDlg:send(
-			"DM_GETDLGITEM",
-			deii)
+		dei = _hDlg:send("DM_GETDLGITEM",	deii)
 		if not dei then break end
-		local t_dlg_elm_get_2 = Far.UpTime
-		local t_dlg_elm_get = t_dlg_elm_get_2 - t_dlg_elm_get_1
+		tbl_elm_chg_flg[deii] = _hDlg:send("DM_EDITUNCHANGEDFLAG", deii, -1)
 		local	tbl_list_items,	dei_6
 		if	dei[1] == 10
 		or	dei[1] == 11
 		then	tbl_list_items = dei[6]
-		end
-		if t_dlg_elm_get > 0 then
 		end
 		dlg_elems[deii] = dei;
 		dlg_elszs[deii] = { dei[1], dei[2], dei[3], dei[4], dei[5], dei[6], dei[7], dei[8], dei[9], dei[10]}
@@ -1048,7 +1043,8 @@ local function fnc_action(sender, msg, dlg_is_menu)
 					_has_own_F5 = true
 				end
 			end
-			if not	is_safe_id and is_menu
+			if not	is_safe_id 
+			and	is_menu
 			then	if dlg_titles.Title	then crc64_t:fnc_append("[HEADER:] "..dlg_titles.Title)	end
 				if dlg_titles.Bottom	then crc64_t:fnc_append("[FOOTER:] "..dlg_titles.Bottom)end
 			end
@@ -1073,7 +1069,8 @@ local function fnc_action(sender, msg, dlg_is_menu)
 				Y1 = dlg_elszs[deii][3],
 				X2 = dlg_elszs[deii][4],
 				Y2 = dlg_elszs[deii][5],
-				Tx = dlg_elszs[deii][6]}
+				Tx = dlg_elszs[deii][6],
+			}
 			dlg_sign = dlg_sign..("I#%x,K:%s,L:%s,T:%x,R:%s,B:%x,W:%s\n"):format(deii, CTLs[dei.Ty]:lower(),
 				(dei.X1 < 0 and "-%X" or "%x"):format(math.abs(dei.X1)),
 				(dei.Y1),
@@ -1354,8 +1351,8 @@ local function fnc_action(sender, msg, dlg_is_menu)
 				elem_targ_x2 = targ_W - dlg_obsts[deii][-1].D
 			end
 		end
-		if	dei[1] == 0 and
-			dei[10]:len() > 0
+		if	dei[1] == 0 
+		and	dei[10]:len() > 0
 		then	local 	max_size = (elm_lim and dlg_elems[elm_lim_idx][4] or targ_W) - dei[2] - 3
 			local 	str_orig =
 					fnc_trim_R(dlg_D.elms_orig[deii][10])
@@ -1371,7 +1368,6 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		if	elm_mod
 		then
 			if pcall(function()
-				local ret_val
 				dlg_elszs[deii][4] = elem_targ_x2
 				dlg_elems[deii][4] = elem_targ_x2
 				local str_trimd = fnc_trim_R(dei[10])
@@ -1383,8 +1379,12 @@ local function fnc_action(sender, msg, dlg_is_menu)
 				then 	dlg_elems[deii][10] =
 						str_trimd
 				end
-				ret_val = far.SetDlgItem(_hDlg, deii, dlg_elems[deii])
-			end) then end -- of PCall(SetDlgItem)
+				local elm_dat_res = far.SetDlgItem(_hDlg, deii, dlg_elems[deii])
+				local chg_flg_res = _hDlg:send("DM_EDITUNCHANGEDFLAG", deii, tbl_elm_chg_flg[deii])
+			end) 
+			then
+			else
+			end -- of PCall(SetDlgItem)
 		end -- of element modified
 	end end 
 
@@ -1478,7 +1478,8 @@ end
 local	dlg_inf_d, check_dlg
 if	mcr_read
 then	dlg_inf_d = dlg_handle.mcr_inf_dlg
-else	if	mcr_retr
+else
+	if	mcr_retr
 	or not	dlg_handle.dlg_infos_cnt
 	then	dlg_inf_d = far.SendDlgMessage(fde.hDlg, DM_GETDIALOGINFO)
 		if	dlg_inf_d
@@ -1490,7 +1491,7 @@ else	if	mcr_retr
 		else	dlg_handle.dlg_infos_cnt= 0
 		end
 	end
-	if	(dlg_handle.mcr_cnt_ch_dlg or 0) < 4
+	if (dlg_handle.mcr_cnt_ch_dlg or 0) < 4
 	then	if	mcr_retr
 		then	dlg_handle.dt_mcr_launch = dt_now
 			dlg_handle.mcr_cnt_ch_dlg = (dlg_handle.mcr_cnt_ch_dlg or 0) + 1
