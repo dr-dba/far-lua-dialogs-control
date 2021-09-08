@@ -152,7 +152,18 @@ local LUACHECK_RESULT_MENU_ID	= "CFD31C22-0D17-4D87-829A-14561B529D34"
 local FAR_EXIT_MSG_DLG_ID_TXT	= "4EBBEFC8-2084-4B7F-94C0-692CE136894D"
 local LUA_EXPLORE_MENU_ID_TXT	= "7646F761-8954-42CA-9CFC-E3F98A1C54D3"
 local FAR_EXIT_MSG_DLG_ID_BIN	= win.Uuid(FAR_EXIT_MSG_DLG_ID_TXT)
-local tbl_menu_areas = { Menu = 1, UserMenu = 1, MainMenu = 1, Disks = 1, ShellAutoCompletion = 1, DialogAutoCompletion = 1 }
+local tbl_menu_areas = { 
+	Menu = 1, 
+	UserMenu = 1, 
+	MainMenu = 1, 
+	Disks = 1, 
+	ShellAutoCompletion = 1, 
+	DialogAutoCompletion = 1 
+}
+local tbl_dlg_id_exits = { 
+	["6163F8A9-EF2E-48FB-9006-B2075EB30382"] = true,
+	[FAR_EXIT_MSG_DLG_ID_TXT] = true
+}
 local Xer0X = require("Lib-Common-@Xer0X")
 Xer0X.DLG_TRACK_STATE = 1
 require("introspection-@Xer0X")
@@ -502,7 +513,7 @@ local CTLs = {
 	,[ 10] = "COMBO_BX"
 	,[ 11] = "LIST_BX"
 	,[255] = "USERCTL"
-		}
+}
 
 local function fnc_trans_msg(status_msg, title, props)
 	far.Message(status_msg, title, "", props)
@@ -950,7 +961,7 @@ local function fnc_action(sender, msg, dlg_is_menu)
 		or	dei[1] == 11
 		then	tbl_list_items = dei[6]
 		end
-		dlg_elems[deii] = dei;
+		dlg_elems[deii] = dei
 		dlg_elszs[deii] = { dei[1], dei[2], dei[3], dei[4], dei[5], dei[6], dei[7], dei[8], dei[9], dei[10]}
 		if dei[4] == 0 then dlg_elszs[deii][4] = dei[2] end
 		if dei[5] == 0 then dlg_elszs[deii][5] = dei[3] end
@@ -966,8 +977,8 @@ local function fnc_action(sender, msg, dlg_is_menu)
 					local	str_item = tbl_list_items[ii_li].Text
 					if	tbl_volatiles
 					then	for ii, ii_mask in ipairs(tbl_volatiles)
-						do	local res_comp_name = far.ProcessName(PN_CMPNAMELIST, ii_mask, str_item)
-							local res_str_match = string.match(str_item, ii_mask)
+						do	local	res_comp_name = far.ProcessName(PN_CMPNAMELIST, ii_mask, str_item)
+							local	res_str_match = string.match(str_item, ii_mask)
 							if	res_comp_name
 							or	res_str_match
 							then	str_mask = ii_mask
@@ -1465,7 +1476,7 @@ local dlg_inf_w =
 if	dlg_hnd_str ~= tostring(dlg_inf_w and dlg_inf_w.Id)
 then	if	mcr_read
 	then	dlg_inf_w = dlg_handle.mcr_inf_win
-	elseif (dlg_handle.mcr_cnt_no_wnd or	0) > 3
+	elseif (dlg_handle.mcr_cnt_no_wnd or 0) > 3
 	then	return fnc_event_async_safe__close(tmr_sender, is_sender_active, "BAD WINDOW!!!")
 	else	dlg_handle.dt_mcr_launch = dt_now
 		dlg_handle.mcr_cnt_no_wnd = (dlg_handle.mcr_cnt_no_wnd or 0) + 1
@@ -1656,7 +1667,8 @@ then
 		if 	dlg_data.guid == Menu.Id
 		or (	dlg_data.guid == nil
 		and (	Area.Current == "MainMenu"
-		or	Area.Current == "UserMenu")
+		or	Area.Current == "UserMenu"
+		or	Area.Current == "Menu") -- all kinds of far built-in menus, as for example "Options\Colors\Editor" etc
 		and	Menu.Id == GUID_ZERO)
 		then    local	tbl_menu_sel = fde.hDlg:send("DM_LISTGETCURPOS", 1)
 			if	tbl_menu_sel.SelectPos == 1
@@ -1672,7 +1684,7 @@ then
 			end
 		end
 	end
-	if	dlg_hand.xuid == FAR_EXIT_MSG_DLG_ID_TXT
+	if	tbl_dlg_id_exits[dlg_hand.xuid]
 	then	fnc_dlg_data_store()
 	end
 	if not	dlg_hand.is_closing
@@ -1777,7 +1789,8 @@ NoEvent { description = "FAR exit detection (for ReXiZeR)";
 if	evt	== DE_DLGPROCINIT
 and	fde.Msg == DN_INITDIALOG
 then	local	dlg_info = fde.hDlg:send(DM_GETDIALOGINFO)
-	if	dlg_info and win.Uuid(dlg_info.Id):upper() == FAR_EXIT_MSG_DLG_ID_TXT
+	if	dlg_info 
+	and	tbl_dlg_id_exits[win.Uuid(dlg_info.Id):upper()]
 	then	fnc_dlg_data_store()
 	end
 end
